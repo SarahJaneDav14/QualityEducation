@@ -1,5 +1,5 @@
-// BookShare - Free Library Application
-class BookShare {
+// Grab-a-Book - Free Library Application
+class GrabABook {
     constructor() {
         this.currentUser = null;
         this.books = this.generateSampleBooks();
@@ -317,10 +317,10 @@ class BookShare {
                             </div>
                             ${dueDateInfo}
                             <div class="d-flex gap-2">
-                                <button class="btn btn-outline-secondary btn-sm flex-fill" onclick="bookShare.showBookDetails(${book.id}, 'ap')">
+                                <button class="btn btn-outline-secondary btn-sm flex-fill" onclick="grabABook.showBookDetails(${book.id}, 'ap')">
                                     <i class="fas fa-info-circle me-1"></i>Details
                                 </button>
-                                <button class="btn btn-primary btn-sm flex-fill" onclick="bookShare.checkoutBook(${book.id}, 'ap')" ${!book.available ? 'disabled' : ''}>
+                                <button class="btn btn-primary btn-sm flex-fill" onclick="grabABook.checkoutBook(${book.id}, 'ap')" ${!book.available ? 'disabled' : ''}>
                                     <i class="fas fa-shopping-cart me-1"></i>Checkout
                                 </button>
                             </div>
@@ -422,10 +422,10 @@ class BookShare {
             `<small class="text-muted d-block">Due: ${new Date(book.dueDate).toLocaleDateString()}</small>` : '';
 
         const actionButton = context === 'my-books' ? 
-            `<button class="btn btn-outline-primary btn-sm" onclick="bookShare.returnBook(${book.id})">
+            `<button class="btn btn-outline-primary btn-sm" onclick="grabABook.returnBook(${book.id})">
                 <i class="fas fa-undo me-1"></i>Return
             </button>` :
-            `<button class="btn btn-primary btn-sm" onclick="bookShare.checkoutBook(${book.id})" ${!book.available ? 'disabled' : ''}>
+            `<button class="btn btn-primary btn-sm" onclick="grabABook.checkoutBook(${book.id})" ${!book.available ? 'disabled' : ''}>
                 <i class="fas fa-shopping-cart me-1"></i>Checkout
             </button>`;
 
@@ -444,7 +444,7 @@ class BookShare {
                             </div>
                             ${dueDateInfo}
                             <div class="d-flex gap-2">
-                                <button class="btn btn-outline-secondary btn-sm flex-fill" onclick="bookShare.showBookDetails(${book.id})">
+                                <button class="btn btn-outline-secondary btn-sm flex-fill" onclick="grabABook.showBookDetails(${book.id})">
                                     <i class="fas fa-info-circle me-1"></i>Details
                                 </button>
                                 ${actionButton}
@@ -571,7 +571,7 @@ class BookShare {
                     <p>${book.description}</p>
                     <div class="mt-3">
                         ${book.available ? 
-                            `<button class="btn btn-primary" onclick="bookShare.checkoutBook(${book.id}); bootstrap.Modal.getInstance(document.getElementById('bookModal')).hide();">
+                            `<button class="btn btn-primary" onclick="grabABook.checkoutBook(${book.id}); bootstrap.Modal.getInstance(document.getElementById('bookModal')).hide();">
                                 <i class="fas fa-shopping-cart me-1"></i>Checkout This Book
                             </button>` :
                             `<button class="btn btn-secondary" disabled>
@@ -662,7 +662,7 @@ class BookShare {
         modalFooter.className = 'modal-footer';
         modalFooter.innerHTML = `
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button type="button" class="btn btn-primary" onclick="bookShare.confirmCheckout(${book.id})">
+            <button type="button" class="btn btn-primary" onclick="grabABook.confirmCheckout(${book.id})">
                 <i class="fas fa-check me-1"></i>Confirm Checkout
             </button>
         `;
@@ -767,16 +767,16 @@ class BookShare {
 
     // Donation functions
     donateAmount(amount) {
-        if (confirm(`Donate $${amount} to BookShare?`)) {
-            this.showNotification('success', `Thank you for your $${amount} donation! Your contribution helps us provide free books to students in need.`);
+        if (confirm(`Donate $${amount} to Grab-a-Book?`)) {
+            this.showNotification('success', `Thank you for your $${amount} donation to Grab-a-Book! Your contribution helps us provide free books to students in need.`);
         }
     }
 
     donateCustomAmount() {
         const amount = parseFloat(document.getElementById('custom-donation').value);
         if (amount && amount > 0) {
-            if (confirm(`Donate $${amount} to BookShare?`)) {
-                this.showNotification('success', `Thank you for your $${amount} donation! Your contribution helps us provide free books to students in need.`);
+            if (confirm(`Donate $${amount} to Grab-a-Book?`)) {
+                this.showNotification('success', `Thank you for your $${amount} donation to Grab-a-Book! Your contribution helps us provide free books to students in need.`);
                 document.getElementById('custom-donation').value = '';
             }
         } else {
@@ -806,7 +806,7 @@ class BookShare {
             'yearly': 'Yearly ($15/year)'
         };
         
-        this.showNotification('success', `Thank you for subscribing to BookShare Magazine! You've selected ${subscriptionTypes[subscriptionType]}. Your first magazine will arrive within 7-10 business days.`);
+        this.showNotification('success', `Thank you for subscribing to Grab-a-Book Magazine! You've selected ${subscriptionTypes[subscriptionType]}. Your first magazine will arrive within 7-10 business days.`);
         form.reset();
     }
 
@@ -838,7 +838,7 @@ class BookShare {
                 <span class="navbar-text me-3">
                     <i class="fas fa-user me-1"></i>Welcome, ${this.currentUser.name}
                 </span>
-                <button class="btn btn-outline-light" onclick="bookShare.logout()">
+                <button class="btn btn-outline-light" onclick="grabABook.logout()">
                     <i class="fas fa-sign-out-alt me-1"></i>Logout
                 </button>
             `;
@@ -883,19 +883,19 @@ class BookShare {
 }
 
 // Initialize the application
-const bookShare = new BookShare();
+const grabABook = new GrabABook();
 
 // Global functions for onclick handlers
-function showHome() { bookShare.showHome(); }
-function showBrowse() { bookShare.showBrowse(); }
-function showMyBooks() { bookShare.showMyBooks(); }
-function showAPClasses() { bookShare.showAPClasses(); }
-function showMagazine() { bookShare.showMagazine(); }
-function showDonate() { bookShare.showDonate(); }
-function showLogin() { bookShare.showLogin(); }
-function showRegister() { bookShare.showRegister(); }
-function searchBooks() { bookShare.searchBooks(); }
-function filterByCategory(category) { bookShare.filterByCategory(category); }
-function filterAPBySubject(subject) { bookShare.filterAPBySubject(subject); }
-function donateAmount(amount) { bookShare.donateAmount(amount); }
-function donateCustomAmount() { bookShare.donateCustomAmount(); }
+function showHome() { grabABook.showHome(); }
+function showBrowse() { grabABook.showBrowse(); }
+function showMyBooks() { grabABook.showMyBooks(); }
+function showAPClasses() { grabABook.showAPClasses(); }
+function showMagazine() { grabABook.showMagazine(); }
+function showDonate() { grabABook.showDonate(); }
+function showLogin() { grabABook.showLogin(); }
+function showRegister() { grabABook.showRegister(); }
+function searchBooks() { grabABook.searchBooks(); }
+function filterByCategory(category) { grabABook.filterByCategory(category); }
+function filterAPBySubject(subject) { grabABook.filterAPBySubject(subject); }
+function donateAmount(amount) { grabABook.donateAmount(amount); }
+function donateCustomAmount() { grabABook.donateCustomAmount(); }
