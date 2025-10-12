@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BookShare - Free Library for Everyone</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="Client/Styles/index.css" rel="stylesheet">
+</head>
+<body>
+    <div id="app">
+        <!-- Navigation -->
+        <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+            <div class="container">
+                <a class="navbar-brand fw-bold" href="#">
+                    <i class="fas fa-book-open me-2"></i>BookShare
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav me-auto">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#" onclick="showHome()">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" onclick="showBrowse()">Browse</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" onclick="showMyBooks()">My Books</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" onclick="showAPClasses()">AP Classes</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" onclick="showMagazine()">Magazine</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" onclick="showDonate()">Donate</a>
+                        </li>
+                    </ul>
+                    <div class="d-flex">
+                        <button class="btn btn-outline-light me-2" onclick="showLogin()">
+                            <i class="fas fa-user me-1"></i>Sign In
+                        </button>
+                        <button class="btn btn-light" onclick="showRegister()">
+                            <i class="fas fa-user-plus me-1"></i>Join Free
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content Container -->
+        <div id="main-content">
+            <!-- Home Page -->
+            <div id="home-page" class="page-content">
+                <!-- Hero Section -->
+                <section class="hero-section bg-gradient text-white py-5">
+                    <div class="container">
+                        <div class="row align-items-center">
+                            <div class="col-lg-6">
+                                <h1 class="display-4 fw-bold mb-4">Free Books for Everyone</h1>
+                                <p class="lead mb-4">Access thousands of books - digital or physical delivery. No fees, no barriers. Just knowledge for all.</p>
+                                <div class="search-container">
+                                    <div class="input-group input-group-lg">
+                                        <input type="text" class="form-control" placeholder="Search for books, authors, or topics..." id="search-input">
+                                        <button class="btn btn-warning" type="button" onclick="searchBooks()">
+                                            <i class="fas fa-search"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-6 text-center">
+                                <div class="hero-stats">
+                                    <div class="row text-center">
+                                        <div class="col-4">
+                                            <h3 class="fw-bold">10K+</h3>
+                                            <p>Books Available</p>
+                                        </div>
+                                        <div class="col-4">
+                                            <h3 class="fw-bold">50K+</h3>
+                                            <p>Happy Readers</p>
+                                        </div>
+                                        <div class="col-4">
+                                            <h3 class="fw-bold">100%</h3>
+                                            <p>Free Service</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Categories Section -->
+                <section class="py-5">
+                    <div class="container">
+                        <h2 class="text-center mb-5">Browse by Category</h2>
+                        <div class="row">
+                            <div class="col-md-3 col-sm-6 mb-4">
+                                <div class="card category-card h-100" onclick="filterByCategory('fiction')">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-magic fa-3x text-primary mb-3"></i>
+                                        <h5>Fiction</h5>
+                                        <p class="text-muted">Novels, Stories & More</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-sm-6 mb-4">
+                                <div class="card category-card h-100" onclick="filterByCategory('education')">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-graduation-cap fa-3x text-success mb-3"></i>
+                                        <h5>Education</h5>
+                                        <p class="text-muted">Textbooks & Learning</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-sm-6 mb-4">
+                                <div class="card category-card h-100" onclick="filterByCategory('children')">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-child fa-3x text-warning mb-3"></i>
+                                        <h5>Children</h5>
+                                        <p class="text-muted">Kids & Young Adult</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-sm-6 mb-4">
+                                <div class="card category-card h-100" onclick="filterByCategory('non-fiction')">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-lightbulb fa-3x text-info mb-3"></i>
+                                        <h5>Non-Fiction</h5>
+                                        <p class="text-muted">Knowledge & Facts</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-sm-6 mb-4">
+                                <div class="card category-card h-100" onclick="showAPClasses()">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-graduation-cap fa-3x text-danger mb-3"></i>
+                                        <h5>AP Classes</h5>
+                                        <p class="text-muted">Textbooks & Study Guides</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-sm-6 mb-4">
+                                <div class="card category-card h-100" onclick="showMagazine()">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-newspaper fa-3x text-secondary mb-3"></i>
+                                        <h5>Offline Magazine</h5>
+                                        <p class="text-muted">No Internet? No Problem!</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Featured Books -->
+                <section class="py-5 bg-light">
+                    <div class="container">
+                        <h2 class="text-center mb-5">Popular This Week</h2>
+                        <div id="featured-books" class="row">
+                            <!-- Books will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Browse Page -->
+            <div id="browse-page" class="page-content d-none">
+                <div class="container py-4">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5>Filters</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <label class="form-label">Category</label>
+                                        <select class="form-select" id="category-filter">
+                                            <option value="">All Categories</option>
+                                            <option value="fiction">Fiction</option>
+                                            <option value="education">Education</option>
+                                            <option value="children">Children</option>
+                                            <option value="non-fiction">Non-Fiction</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Format</label>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" value="digital" id="digital-filter">
+                                            <label class="form-check-label" for="digital-filter">Digital</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" value="physical" id="physical-filter">
+                                            <label class="form-check-label" for="physical-filter">Physical</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-9">
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <h2>All Books</h2>
+                                <div class="d-flex gap-2">
+                                    <select class="form-select" id="sort-filter" style="width: auto;">
+                                        <option value="title">Sort by Title</option>
+                                        <option value="author">Sort by Author</option>
+                                        <option value="popularity">Most Popular</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div id="browse-books" class="row">
+                                <!-- Books will be populated by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- My Books Page -->
+            <div id="my-books-page" class="page-content d-none">
+                <div class="container py-4">
+                    <h2 class="mb-4">My Books</h2>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <h3 class="text-primary">3</h3>
+                                    <p>Currently Reading</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <h3 class="text-warning">2</h3>
+                                    <p>Due Soon</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <h3 class="text-success">15</h3>
+                                    <p>Books Read</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <h3 class="text-danger" id="late-fee-amount">$0.00</h3>
+                                    <p>Late Fees</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <h4>Currently Checked Out</h4>
+                        <div id="checked-out-books" class="row">
+                            <!-- Books will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AP Classes Page -->
+            <div id="ap-classes-page" class="page-content d-none">
+                <div class="container py-4">
+                    <div class="row">
+                        <div class="col-12">
+                            <h2 class="mb-4">AP Classes & Study Materials</h2>
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>Free AP Resources!</strong> Access textbooks and study guides for all AP courses. Perfect for students preparing for AP exams.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5>AP Subjects</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="list-group list-group-flush">
+                                        <button class="list-group-item list-group-item-action" onclick="filterAPBySubject('all')">All Subjects</button>
+                                        <button class="list-group-item list-group-item-action" onclick="filterAPBySubject('math')">Mathematics</button>
+                                        <button class="list-group-item list-group-item-action" onclick="filterAPBySubject('science')">Sciences</button>
+                                        <button class="list-group-item list-group-item-action" onclick="filterAPBySubject('english')">English</button>
+                                        <button class="list-group-item list-group-item-action" onclick="filterAPBySubject('history')">History</button>
+                                        <button class="list-group-item list-group-item-action" onclick="filterAPBySubject('languages')">Languages</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-9">
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <h3 id="ap-subject-title">All AP Materials</h3>
+                                <div class="d-flex gap-2">
+                                    <select class="form-select" id="ap-type-filter" style="width: auto;">
+                                        <option value="all">All Types</option>
+                                        <option value="textbook">Textbooks</option>
+                                        <option value="study-guide">Study Guides</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div id="ap-books" class="row">
+                                <!-- AP books will be populated by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Magazine Page -->
+            <div id="magazine-page" class="page-content d-none">
+                <div class="container py-4">
+                    <div class="row">
+                        <div class="col-12 text-center mb-5">
+                            <h2 class="display-5 fw-bold text-primary">BookShare Magazine</h2>
+                            <p class="lead">Get our monthly catalog delivered to your door - perfect for areas with limited internet access!</p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-newspaper fa-4x text-primary mb-3"></i>
+                                    <h4>Monthly Magazine</h4>
+                                    <p class="text-muted">Receive our full catalog of books delivered to your home every month.</p>
+                                    <div class="mt-4">
+                                        <h5>What's Included:</h5>
+                                        <ul class="list-unstyled text-start">
+                                            <li><i class="fas fa-check text-success me-2"></i>Complete book catalog with descriptions</li>
+                                            <li><i class="fas fa-check text-success me-2"></i>AP class materials and study guides</li>
+                                            <li><i class="fas fa-check text-success me-2"></i>New arrivals and featured books</li>
+                                            <li><i class="fas fa-check text-success me-2"></i>Pre-addressed return envelope</li>
+                                            <li><i class="fas fa-check text-success me-2"></i>Book request forms</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h4 class="text-center mb-4">Subscribe to Magazine</h4>
+                                    <form id="magazine-subscription-form">
+                                        <div class="mb-3">
+                                            <label class="form-label">Full Name</label>
+                                            <input type="text" class="form-control" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Street Address</label>
+                                            <input type="text" class="form-control" required>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">City</label>
+                                                <input type="text" class="form-control" required>
+                                            </div>
+                                            <div class="col-md-3 mb-3">
+                                                <label class="form-label">State</label>
+                                                <input type="text" class="form-control" maxlength="2" required>
+                                            </div>
+                                            <div class="col-md-3 mb-3">
+                                                <label class="form-label">ZIP Code</label>
+                                                <input type="text" class="form-control" required>
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Phone Number (Optional)</label>
+                                            <input type="tel" class="form-control" placeholder="For delivery updates">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Subscription Type</label>
+                                            <select class="form-select" required>
+                                                <option value="">Select Option</option>
+                                                <option value="monthly">Monthly ($2/month)</option>
+                                                <option value="quarterly">Quarterly ($5/3 months)</option>
+                                                <option value="yearly">Yearly ($15/year)</option>
+                                            </select>
+                                        </div>
+                                        <div class="alert alert-info">
+                                            <i class="fas fa-info-circle me-2"></i>
+                                            <strong>Free for qualifying households!</strong> If you receive SNAP, WIC, or live in a rural area, the magazine is completely free.
+                                        </div>
+                                        <button type="submit" class="btn btn-primary w-100">
+                                            <i class="fas fa-paper-plane me-1"></i>Subscribe to Magazine
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-5">
+                        <div class="col-md-4 mb-4">
+                            <div class="card text-center h-100">
+                                <div class="card-body">
+                                    <i class="fas fa-envelope fa-3x text-success mb-3"></i>
+                                    <h5>How It Works</h5>
+                                    <p>1. Subscribe to receive monthly magazine</p>
+                                    <p>2. Browse books in the catalog</p>
+                                    <p>3. Fill out request form</p>
+                                    <p>4. Mail back in provided envelope</p>
+                                    <p>5. Books delivered to your door!</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-4">
+                            <div class="card text-center h-100">
+                                <div class="card-body">
+                                    <i class="fas fa-truck fa-3x text-primary mb-3"></i>
+                                    <h5>Free Delivery</h5>
+                                    <p>All books are delivered free of charge. No shipping fees, no hidden costs. We cover all delivery and return shipping.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-4">
+                            <div class="card text-center h-100">
+                                <div class="card-body">
+                                    <i class="fas fa-heart fa-3x text-danger mb-3"></i>
+                                    <h5>Community Support</h5>
+                                    <p>This service is made possible by donations from our community. Help us reach more families by donating books or money.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h5>Sample Magazine Pages</h5>
+                                    <div class="row mt-3">
+                                        <div class="col-md-3">
+                                            <div class="card">
+                                                <div class="card-body text-center">
+                                                    <i class="fas fa-book fa-2x text-primary mb-2"></i>
+                                                    <h6>Featured Books</h6>
+                                                    <small class="text-muted">This month's highlights</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="card">
+                                                <div class="card-body text-center">
+                                                    <i class="fas fa-graduation-cap fa-2x text-success mb-2"></i>
+                                                    <h6>AP Materials</h6>
+                                                    <small class="text-muted">Study guides & textbooks</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="card">
+                                                <div class="card-body text-center">
+                                                    <i class="fas fa-child fa-2x text-warning mb-2"></i>
+                                                    <h6>Children's Books</h6>
+                                                    <small class="text-muted">Ages 0-18</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="card">
+                                                <div class="card-body text-center">
+                                                    <i class="fas fa-envelope fa-2x text-info mb-2"></i>
+                                                    <h6>Request Form</h6>
+                                                    <small class="text-muted">Easy ordering</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Donate Page -->
+            <div id="donate-page" class="page-content d-none">
+                <div class="container py-4">
+                    <div class="row">
+                        <div class="col-12 text-center mb-5">
+                            <h2 class="display-5 fw-bold text-primary">Support BookShare</h2>
+                            <p class="lead">Help us provide free books to students and families in need</p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-dollar-sign fa-4x text-success mb-3"></i>
+                                    <h4>Donate Money</h4>
+                                    <p class="text-muted">Your financial contribution helps us purchase new books and cover shipping costs.</p>
+                                    <div class="mt-4">
+                                        <h5>Suggested Donations:</h5>
+                                        <div class="row mt-3">
+                                            <div class="col-6">
+                                                <button class="btn btn-outline-success w-100 mb-2" onclick="donateAmount(10)">$10</button>
+                                                <button class="btn btn-outline-success w-100 mb-2" onclick="donateAmount(25)">$25</button>
+                                            </div>
+                                            <div class="col-6">
+                                                <button class="btn btn-outline-success w-100 mb-2" onclick="donateAmount(50)">$50</button>
+                                                <button class="btn btn-outline-success w-100 mb-2" onclick="donateAmount(100)">$100</button>
+                                            </div>
+                                        </div>
+                                        <div class="mt-3">
+                                            <div class="input-group">
+                                                <span class="input-group-text">$</span>
+                                                <input type="number" class="form-control" id="custom-donation" placeholder="Custom amount" min="1">
+                                                <button class="btn btn-success" onclick="donateCustomAmount()">Donate</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-book fa-4x text-primary mb-3"></i>
+                                    <h4>Donate Books</h4>
+                                    <p class="text-muted">Share your gently used books with others in your community.</p>
+                                    <div class="mt-4">
+                                        <form id="book-donation-form">
+                                            <div class="mb-3">
+                                                <label class="form-label">Book Title</label>
+                                                <input type="text" class="form-control" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Author</label>
+                                                <input type="text" class="form-control" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Category</label>
+                                                <select class="form-select" required>
+                                                    <option value="">Select Category</option>
+                                                    <option value="fiction">Fiction</option>
+                                                    <option value="education">Education</option>
+                                                    <option value="children">Children</option>
+                                                    <option value="non-fiction">Non-Fiction</option>
+                                                    <option value="ap">AP Class Material</option>
+                                                </select>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Condition</label>
+                                                <select class="form-select" required>
+                                                    <option value="">Select Condition</option>
+                                                    <option value="excellent">Excellent</option>
+                                                    <option value="good">Good</option>
+                                                    <option value="fair">Fair</option>
+                                                </select>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Your Contact Info</label>
+                                                <input type="email" class="form-control" placeholder="Email or phone" required>
+                                            </div>
+                                            <button type="submit" class="btn btn-primary w-100">
+                                                <i class="fas fa-heart me-1"></i>Submit Donation
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-5">
+                        <div class="col-12">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h5>Impact of Your Donation</h5>
+                                    <div class="row mt-3">
+                                        <div class="col-md-4">
+                                            <h3 class="text-primary">$10</h3>
+                                            <p>Buys 2 new books</p>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <h3 class="text-success">$25</h3>
+                                            <p>Covers shipping for 10 books</p>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <h3 class="text-info">$50</h3>
+                                            <p>Supports 5 students for a month</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Book Detail Modal -->
+        <div class="modal fade" id="bookModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="bookModalTitle">Book Details</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body" id="bookModalBody">
+                        <!-- Book details will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Checkout Modal -->
+        <div class="modal fade" id="checkoutModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Checkout Book</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body" id="checkoutModalBody">
+                        <!-- Checkout form will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="Client/Scripts/index.js"></script>
+</body>
+</html>
