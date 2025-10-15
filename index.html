@@ -39,7 +39,7 @@
                             <a class="nav-link" href="#" onclick="showAPClasses()">AP Classes</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="#" onclick="showMagazine()">Magazine</a>
+                            <a class="nav-link" href="#" onclick="showMagazine()">Free Magazine</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="#" onclick="showDonate()">Donate</a>
@@ -67,7 +67,7 @@
                         <div class="row align-items-center">
                             <div class="col-lg-6">
                                 <h1 class="display-4 fw-bold mb-4">Free Books for Everyone</h1>
-                                <p class="lead mb-4">Access thousands of books - digital or physical delivery. No fees, no barriers. Just knowledge for all.</p>
+                                <p class="lead mb-4">Access thousands of books - digital or physical delivery. Completely free service with no fees, no barriers. Just knowledge for all.</p>
                                 <div class="search-container">
                                     <div class="input-group input-group-lg">
                                         <input type="text" class="form-control" placeholder="Search for books, authors, or topics..." id="search-input">
@@ -90,7 +90,7 @@
                                         </div>
                                         <div class="col-4">
                                             <h3 class="fw-bold">100%</h3>
-                                            <p>Free Service</p>
+                                            <p>Always Free</p>
                                         </div>
                                     </div>
                                 </div>
@@ -153,8 +153,8 @@
                                 <div class="card category-card h-100" onclick="showMagazine()">
                                     <div class="card-body text-center">
                                         <i class="fas fa-newspaper fa-3x text-secondary mb-3"></i>
-                                        <h5>Offline Magazine</h5>
-                                        <p class="text-muted">No Internet? No Problem!</p>
+                                        <h5>Free Magazine</h5>
+                                        <p class="text-muted">Get Books Delivered!</p>
                                     </div>
                                 </div>
                             </div>
@@ -281,7 +281,7 @@
                             <h2 class="mb-4">AP Classes & Study Materials</h2>
                             <div class="alert alert-info">
                                 <i class="fas fa-info-circle me-2"></i>
-                                <strong>Free AP Resources!</strong> Access textbooks and study guides for all AP courses. Perfect for students preparing for AP exams.
+                                <strong>Completely Free AP Resources!</strong> Access textbooks and study guides for all AP courses at no cost. Perfect for students preparing for AP exams.
                             </div>
                         </div>
                     </div>
@@ -322,13 +322,14 @@
                 </div>
             </div>
 
-            <!-- Magazine Page -->
+
+            <!-- Free Magazine Page -->
             <div id="magazine-page" class="page-content d-none">
                 <div class="container py-4">
                     <div class="row">
                         <div class="col-12 text-center mb-5">
-                            <h2 class="display-5 fw-bold text-primary">Grab-a-Book Magazine</h2>
-                            <p class="lead">Get our monthly catalog delivered to your door - perfect for areas with limited internet access!</p>
+                            <h2 class="display-5 fw-bold text-primary">Free Magazine Delivery</h2>
+                            <p class="lead">Get our book catalog delivered to your door - completely free! Perfect for areas with limited internet access.</p>
                         </div>
                     </div>
                     <div class="row">
@@ -336,8 +337,8 @@
                             <div class="card h-100">
                                 <div class="card-body text-center">
                                     <i class="fas fa-newspaper fa-4x text-primary mb-3"></i>
-                                    <h4>Monthly Magazine</h4>
-                                    <p class="text-muted">Receive our full catalog of books delivered to your home every month.</p>
+                                    <h4>Free Magazine Service</h4>
+                                    <p class="text-muted">Receive our book catalog delivered to your home - no cost, no subscription required!</p>
                                     <div class="mt-4">
                                         <h5>What's Included:</h5>
                                         <ul class="list-unstyled text-start">
@@ -346,6 +347,7 @@
                                             <li><i class="fas fa-check text-success me-2"></i>New arrivals and featured books</li>
                                             <li><i class="fas fa-check text-success me-2"></i>Pre-addressed return envelope</li>
                                             <li><i class="fas fa-check text-success me-2"></i>Book request forms</li>
+                                            <li><i class="fas fa-check text-success me-2"></i>Free delivery and return shipping</li>
                                         </ul>
                                     </div>
                                 </div>
@@ -354,8 +356,8 @@
                         <div class="col-md-6 mb-4">
                             <div class="card h-100">
                                 <div class="card-body">
-                                    <h4 class="text-center mb-4">Subscribe to Magazine</h4>
-                                    <form id="magazine-subscription-form">
+                                    <h4 class="text-center mb-4">Request Free Magazine</h4>
+                                    <form id="magazine-request-form">
                                         <div class="mb-3">
                                             <label class="form-label">Full Name</label>
                                             <input type="text" class="form-control" required>
@@ -383,20 +385,23 @@
                                             <input type="tel" class="form-control" placeholder="For delivery updates">
                                         </div>
                                         <div class="mb-3">
-                                            <label class="form-label">Subscription Type</label>
+                                            <label class="form-label">Magazine Type</label>
                                             <select class="form-select" required>
-                                                <option value="">Select Option</option>
-                                                <option value="monthly">Monthly ($2/month)</option>
-                                                <option value="quarterly">Quarterly ($5/3 months)</option>
-                                                <option value="yearly">Yearly ($15/year)</option>
+                                                <option value="">Select Magazine Type</option>
+                                                <option value="ap">AP Class Materials</option>
+                                                <option value="children-fantasy">Children's Fantasy & Adventure</option>
+                                                <option value="historical-nonfiction">Historical Non-Fiction</option>
+                                                <option value="fiction">Fiction & Literature</option>
+                                                <option value="education">Educational & Textbooks</option>
+                                                <option value="general">General Catalog (All Books)</option>
                                             </select>
                                         </div>
-                                        <div class="alert alert-info">
-                                            <i class="fas fa-info-circle me-2"></i>
-                                            <strong>Free for qualifying households!</strong> If you receive SNAP, WIC, or live in a rural area, the magazine is completely free.
+                                        <div class="alert alert-success">
+                                            <i class="fas fa-gift me-2"></i>
+                                            <strong>Completely Free!</strong> No cost, no subscription, no hidden fees. We'll send you the magazine and cover all shipping costs.
                                         </div>
                                         <button type="submit" class="btn btn-primary w-100">
-                                            <i class="fas fa-paper-plane me-1"></i>Subscribe to Magazine
+                                            <i class="fas fa-paper-plane me-1"></i>Request Free Magazine
                                         </button>
                                     </form>
                                 </div>
@@ -409,7 +414,7 @@
                                 <div class="card-body">
                                     <i class="fas fa-envelope fa-3x text-success mb-3"></i>
                                     <h5>How It Works</h5>
-                                    <p>1. Subscribe to receive monthly magazine</p>
+                                    <p>1. Request your free magazine</p>
                                     <p>2. Browse books in the catalog</p>
                                     <p>3. Fill out request form</p>
                                     <p>4. Mail back in provided envelope</p>
@@ -440,41 +445,32 @@
                         <div class="col-12">
                             <div class="card bg-light">
                                 <div class="card-body text-center">
-                                    <h5>Sample Magazine Pages</h5>
+                                    <h5>Available Magazine Types</h5>
                                     <div class="row mt-3">
-                                        <div class="col-md-3">
-                                            <div class="card">
-                                                <div class="card-body text-center">
-                                                    <i class="fas fa-book fa-2x text-primary mb-2"></i>
-                                                    <h6>Featured Books</h6>
-                                                    <small class="text-muted">This month's highlights</small>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-3">
+                                        <div class="col-md-4">
                                             <div class="card">
                                                 <div class="card-body text-center">
                                                     <i class="fas fa-graduation-cap fa-2x text-success mb-2"></i>
                                                     <h6>AP Materials</h6>
-                                                    <small class="text-muted">Study guides & textbooks</small>
+                                                    <small class="text-muted">Textbooks & study guides</small>
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="col-md-3">
+                                        <div class="col-md-4">
                                             <div class="card">
                                                 <div class="card-body text-center">
                                                     <i class="fas fa-child fa-2x text-warning mb-2"></i>
-                                                    <h6>Children's Books</h6>
-                                                    <small class="text-muted">Ages 0-18</small>
+                                                    <h6>Children's Fantasy</h6>
+                                                    <small class="text-muted">Adventure & imagination</small>
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="col-md-3">
+                                        <div class="col-md-4">
                                             <div class="card">
                                                 <div class="card-body text-center">
-                                                    <i class="fas fa-envelope fa-2x text-info mb-2"></i>
-                                                    <h6>Request Form</h6>
-                                                    <small class="text-muted">Easy ordering</small>
+                                                    <i class="fas fa-scroll fa-2x text-info mb-2"></i>
+                                                    <h6>Historical Non-Fiction</h6>
+                                                    <small class="text-muted">Real stories & facts</small>
                                                 </div>
                                             </div>
                                         </div>

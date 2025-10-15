@@ -2,21 +2,46 @@
 class GrabABook {
     constructor() {
         this.currentUser = null;
-        this.books = this.generateSampleBooks();
-        this.apBooks = this.generateAPBooks();
+        this.books = [];
+        this.apBooks = [];
         this.checkedOutBooks = [];
         this.currentPage = 'home';
         this.lateFees = 0;
+        this.apiBaseUrl = 'http://localhost:5000/api'; // Update this to match your API URL
         this.init();
     }
 
-    init() {
+    async init() {
+        await this.loadBooksFromAPI();
         this.loadFeaturedBooks();
         this.setupEventListeners();
         this.checkUserSession();
     }
 
-    // Sample book data - in real app this would come from API
+    // Load books from API
+    async loadBooksFromAPI() {
+        try {
+            // Try to fetch from API first
+            const [booksResponse, apBooksResponse] = await Promise.all([
+                fetch(`${this.apiBaseUrl}/books`),
+                fetch(`${this.apiBaseUrl}/apbooks`)
+            ]);
+            
+            if (booksResponse.ok && apBooksResponse.ok) {
+                this.books = await booksResponse.json();
+                this.apBooks = await apBooksResponse.json();
+                console.log('Successfully loaded books from API');
+            } else {
+                throw new Error('API not responding');
+            }
+        } catch (error) {
+            console.log('API not available, using sample data:', error);
+            this.books = this.generateSampleBooks();
+            this.apBooks = this.generateAPBooks();
+        }
+    }
+
+    // Sample book data - fallback when API is not available
     generateSampleBooks() {
         return [
             {
@@ -25,7 +50,7 @@ class GrabABook {
                 author: "Harper Lee",
                 category: "fiction",
                 description: "A gripping tale of racial injustice and childhood innocence in the American South.",
-                cover: "https://via.placeholder.com/200x300/4A90E2/FFFFFF?text=To+Kill+a+Mockingbird",
+                cover: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjNEE5MEUyIi8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iI0ZGRkZGRiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPlRvIEtpbGwgYSBNb2NraW5nYmlyZDwvdGV4dD4KPC9zdmc+",
                 available: true,
                 formats: ["digital", "physical"],
                 dueDate: null,
@@ -37,7 +62,7 @@ class GrabABook {
                 author: "Dr. Sarah Johnson",
                 category: "education",
                 description: "Essential math concepts explained in simple terms for all ages.",
-                cover: "https://via.placeholder.com/200x300/27AE60/FFFFFF?text=Math+Basics",
+                cover: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMjdBRTYwIi8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iI0ZGRkZGRiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk1hdGggQmFzaWNzPC90ZXh0Pgo8L3N2Zz4=",
                 available: true,
                 formats: ["digital", "physical"],
                 dueDate: null,
@@ -49,7 +74,7 @@ class GrabABook {
                 author: "Antoine de Saint-Exupéry",
                 category: "children",
                 description: "A timeless story about friendship, love, and the importance of seeing with the heart.",
-                cover: "https://via.placeholder.com/200x300/F39C12/FFFFFF?text=Little+Prince",
+                cover: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjRjM5QzEyIi8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iI0ZGRkZGRiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkxpdHRsZSBQcmluY2U8L3RleHQ+Cjwvc3ZnPg==",
                 available: true,
                 formats: ["digital", "physical"],
                 dueDate: null,
@@ -61,7 +86,7 @@ class GrabABook {
                 author: "Yuval Noah Harari",
                 category: "non-fiction",
                 description: "Explore the history and impact of Homo sapiens on the world.",
-                cover: "https://via.placeholder.com/200x300/9B59B6/FFFFFF?text=Sapiens",
+                cover: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjOUI1OUI2Ii8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iI0ZGRkZGRiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPlNhcGllbnM8L3RleHQ+Cjwvc3ZnPg==",
                 available: true,
                 formats: ["digital", "physical"],
                 dueDate: null,
@@ -73,7 +98,7 @@ class GrabABook {
                 author: "F. Scott Fitzgerald",
                 category: "fiction",
                 description: "A classic American novel about the Jazz Age and the American Dream.",
-                cover: "https://via.placeholder.com/200x300/E74C3C/FFFFFF?text=Great+Gatsby",
+                cover: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjRTc0QzNDIi8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iI0ZGRkZGRiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkdyZWF0IEdhdHNieTwvdGV4dD4KPC9zdmc+",
                 available: false,
                 formats: ["digital", "physical"],
                 dueDate: "2024-02-15",
@@ -85,11 +110,131 @@ class GrabABook {
                 author: "Prof. Michael Chen",
                 category: "education",
                 description: "Basic science concepts made accessible for everyone.",
-                cover: "https://via.placeholder.com/200x300/3498DB/FFFFFF?text=Science+Simple",
+                cover: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMzQ5OEQiLz4KICA8dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE0IiBmaWxsPSIjRkZGRkZGIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+U2NpZW5jZSBTaW1wbGU8L3RleHQ+Cjwvc3ZnPg==",
                 available: true,
                 formats: ["digital"],
                 dueDate: null,
                 popularity: 75
+            },
+            {
+                id: 7,
+                title: "Harry Potter and the Sorcerer's Stone",
+                author: "J.K. Rowling",
+                category: "children",
+                description: "The magical beginning of Harry Potter's journey at Hogwarts School of Witchcraft and Wizardry.",
+                cover: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjRkY2QjAwIi8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMiIgZmlsbD0iI0ZGRkZGRiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkhhcnJ5IFBvdHRlcjwvdGV4dD4KPC9zdmc+",
+                available: true,
+                formats: ["digital", "physical"],
+                dueDate: null,
+                popularity: 98
+            },
+            {
+                id: 8,
+                title: "Pride and Prejudice",
+                author: "Jane Austen",
+                category: "fiction",
+                description: "A romantic novel about Elizabeth Bennet and Mr. Darcy in 19th century England.",
+                cover: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjOUI1OUI2Ii8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMiIgZmlsbD0iI0ZGRkZGRiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPlByaWRlICYgUHJlanVkaWNlPC90ZXh0Pgo8L3N2Zz4=",
+                available: true,
+                formats: ["digital", "physical"],
+                dueDate: null,
+                popularity: 89
+            },
+            {
+                id: 9,
+                title: "The Cat in the Hat",
+                author: "Dr. Seuss",
+                category: "children",
+                description: "A classic children's book about a mischievous cat who visits two children on a rainy day.",
+                cover: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjRkY0NDQ0Ii8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMiIgZmlsbD0iI0ZGRkZGRiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkNhdCBpbiB0aGUgSGF0PC90ZXh0Pgo8L3N2Zz4=",
+                available: true,
+                formats: ["digital", "physical"],
+                dueDate: null,
+                popularity: 85
+            },
+            {
+                id: 10,
+                title: "1984",
+                author: "George Orwell",
+                category: "fiction",
+                description: "A dystopian novel about totalitarian surveillance and thought control.",
+                cover: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMzMzMzMzIi8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iI0ZGRkZGRiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPjE5ODQ8L3RleHQ+Cjwvc3ZnPg==",
+                available: true,
+                formats: ["digital", "physical"],
+                dueDate: null,
+                popularity: 91
+            },
+            {
+                id: 11,
+                title: "The Diary of Anne Frank",
+                author: "Anne Frank",
+                category: "non-fiction",
+                description: "The diary of a young Jewish girl hiding from the Nazis during World War II.",
+                cover: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjOEI0NkQ5Ii8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMiIgZmlsbD0iI0ZGRkZGRiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkFubmUgRnJhbmvigJlzIERpYXJ5PC90ZXh0Pgo8L3N2Zz4=",
+                available: true,
+                formats: ["digital", "physical"],
+                dueDate: null,
+                popularity: 87
+            },
+            {
+                id: 12,
+                title: "Basic Physics",
+                author: "Dr. James Wilson",
+                category: "education",
+                description: "Introduction to physics concepts for high school students.",
+                cover: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjRTc0QzNDIi8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iI0ZGRkZGRiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkJhc2ljIFBoeXNpY3M8L3RleHQ+Cjwvc3ZnPg==",
+                available: true,
+                formats: ["digital", "physical"],
+                dueDate: null,
+                popularity: 73
+            },
+            {
+                id: 13,
+                title: "Charlotte's Web",
+                author: "E.B. White",
+                category: "children",
+                description: "A heartwarming story about friendship between a pig named Wilbur and a spider named Charlotte.",
+                cover: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjRjM5QzEyIi8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMiIgZmlsbD0iI0ZGRkZGRiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkNoYXJsb3R0ZSdzIFdlYjwvdGV4dD4KPC9zdmc+",
+                available: true,
+                formats: ["digital", "physical"],
+                dueDate: null,
+                popularity: 84
+            },
+            {
+                id: 14,
+                title: "The Hunger Games",
+                author: "Suzanne Collins",
+                category: "fiction",
+                description: "A dystopian novel about a televised fight to the death in a post-apocalyptic world.",
+                cover: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjQ0M0QzQzIi8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMiIgZmlsbD0iI0ZGRkZGRiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkh1bmdlciBHYW1lczwvdGV4dD4KPC9zdmc+",
+                available: true,
+                formats: ["digital", "physical"],
+                dueDate: null,
+                popularity: 93
+            },
+            {
+                id: 15,
+                title: "World War II: A History",
+                author: "Dr. Robert Smith",
+                category: "non-fiction",
+                description: "Comprehensive account of the Second World War and its global impact.",
+                cover: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjOUI1OUI2Ii8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMiIgZmlsbD0iI0ZGRkZGRiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPldXSUkgSGlzdG9yeTwvdGV4dD4KPC9zdmc+",
+                available: true,
+                formats: ["digital", "physical"],
+                dueDate: null,
+                popularity: 81
+            },
+            {
+                id: 16,
+                title: "Algebra Made Easy",
+                author: "Prof. Maria Garcia",
+                category: "education",
+                description: "Step-by-step guide to algebra concepts and problem solving.",
+                cover: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMjdBRTYwIi8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iI0ZGRkZGRiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkFsZ2VicmEgTWFkZSBFYXN5PC90ZXh0Pgo8L3N2Zz4=",
+                available: true,
+                formats: ["digital", "physical"],
+                dueDate: null,
+                popularity: 76
             }
         ];
     }
@@ -104,7 +249,7 @@ class GrabABook {
                 subject: "math",
                 type: "textbook",
                 description: "Comprehensive textbook covering all AP Calculus AB topics with practice problems and solutions.",
-                cover: "https://via.placeholder.com/200x300/8E44AD/FFFFFF?text=AP+Calculus",
+                cover: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjOEU0NEFEIi8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iI0ZGRkZGRiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkFQIENhbGN1bHVzPC90ZXh0Pgo8L3N2Zz4=",
                 available: true,
                 formats: ["digital", "physical"],
                 dueDate: null,
@@ -117,7 +262,7 @@ class GrabABook {
                 subject: "science",
                 type: "study-guide",
                 description: "Essential study guide for AP Biology exam with practice tests and detailed explanations.",
-                cover: "https://via.placeholder.com/200x300/27AE60/FFFFFF?text=AP+Biology",
+                cover: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMjdBRTYwIi8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iI0ZGRkZGRiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkFQIEJpb2xvZ3k8L3RleHQ+Cjwvc3ZnPg==",
                 available: true,
                 formats: ["digital", "physical"],
                 dueDate: null,
@@ -130,7 +275,7 @@ class GrabABook {
                 subject: "english",
                 type: "textbook",
                 description: "Complete guide to AP English Literature with literary analysis and essay writing techniques.",
-                cover: "https://via.placeholder.com/200x300/E74C3C/FFFFFF?text=AP+English",
+                cover: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjRTc0QzNDIi8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iI0ZGRkZGRiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkFQIEVuZ2xpc2g8L3RleHQ+Cjwvc3ZnPg==",
                 available: true,
                 formats: ["digital", "physical"],
                 dueDate: null,
@@ -143,7 +288,7 @@ class GrabABook {
                 subject: "history",
                 type: "study-guide",
                 description: "Comprehensive study guide covering all periods of world history for AP exam preparation.",
-                cover: "https://via.placeholder.com/200x300/F39C12/FFFFFF?text=AP+History",
+                cover: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjRjM5QzEyIi8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iI0ZGRkZGRiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkFQIEhpc3Rvcnk8L3RleHQ+Cjwvc3ZnPg==",
                 available: false,
                 formats: ["digital", "physical"],
                 dueDate: "2024-02-20",
@@ -156,7 +301,7 @@ class GrabABook {
                 subject: "science",
                 type: "textbook",
                 description: "Complete AP Chemistry textbook with lab experiments and practice problems.",
-                cover: "https://via.placeholder.com/200x300/3498DB/FFFFFF?text=AP+Chemistry",
+                cover: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMzQ5OEQiLz4KICA8dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE0IiBmaWxsPSIjRkZGRkZGIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+QVAgQ2hlbWlzdHJ5PC90ZXh0Pgo8L3N2Zz4=",
                 available: true,
                 formats: ["digital", "physical"],
                 dueDate: null,
@@ -169,11 +314,89 @@ class GrabABook {
                 subject: "languages",
                 type: "study-guide",
                 description: "Essential guide for AP Spanish Language exam with cultural context and practice tests.",
-                cover: "https://via.placeholder.com/200x300/16A085/FFFFFF?text=AP+Spanish",
+                cover: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMTZBMDg1Ii8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iI0ZGRkZGRiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkFQIFNwYW5pc2g8L3RleHQ+Cjwvc3ZnPg==",
                 available: true,
                 formats: ["digital", "physical"],
                 dueDate: null,
                 popularity: 82
+            },
+            {
+                id: 107,
+                title: "AP Physics 1 Textbook",
+                author: "Dr. David Kim",
+                subject: "science",
+                type: "textbook",
+                description: "Complete AP Physics 1 textbook covering mechanics, waves, and electricity.",
+                cover: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjRTc0QzNDIi8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMiIgZmlsbD0iI0ZGRkZGRiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkFQIFBoeXNpY3MgMTwvdGV4dD4KPC9zdmc+",
+                available: true,
+                formats: ["digital", "physical"],
+                dueDate: null,
+                popularity: 86
+            },
+            {
+                id: 108,
+                title: "AP US History Study Guide",
+                author: "Dr. Patricia Adams",
+                subject: "history",
+                type: "study-guide",
+                description: "Comprehensive study guide for AP US History from colonial times to present.",
+                cover: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjRjM5QzEyIi8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMiIgZmlsbD0iI0ZGRkZGRiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkFQIFVTIElpc3Rvcnk8L3RleHQ+Cjwvc3ZnPg==",
+                available: true,
+                formats: ["digital", "physical"],
+                dueDate: null,
+                popularity: 89
+            },
+            {
+                id: 109,
+                title: "AP Psychology Textbook",
+                author: "Dr. Rachel Green",
+                subject: "science",
+                type: "textbook",
+                description: "Complete AP Psychology textbook covering all major psychological concepts and theories.",
+                cover: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjOUI1OUI2Ii8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMiIgZmlsbD0iI0ZGRkZGRiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkFQIFBzeWNob2xvZ3k8L3RleHQ+Cjwvc3ZnPg==",
+                available: true,
+                formats: ["digital", "physical"],
+                dueDate: null,
+                popularity: 83
+            },
+            {
+                id: 110,
+                title: "AP French Language Study Guide",
+                author: "Prof. Marie Dubois",
+                subject: "languages",
+                type: "study-guide",
+                description: "Essential guide for AP French Language exam with cultural context and practice tests.",
+                cover: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMjdBRTYwIi8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMiIgZmlsbD0iI0ZGRkZGRiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkFQIEZyZW5jaDwvdGV4dD4KPC9zdmc+",
+                available: true,
+                formats: ["digital", "physical"],
+                dueDate: null,
+                popularity: 80
+            },
+            {
+                id: 111,
+                title: "AP Statistics Textbook",
+                author: "Dr. Kevin Lee",
+                subject: "math",
+                type: "textbook",
+                description: "Complete AP Statistics textbook covering data analysis, probability, and statistical inference.",
+                cover: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjOEU0NEFEIi8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMiIgZmlsbD0iI0ZGRkZGRiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkFQIFN0YXRpc3RpY3M8L3RleHQ+Cjwvc3ZnPg==",
+                available: true,
+                formats: ["digital", "physical"],
+                dueDate: null,
+                popularity: 84
+            },
+            {
+                id: 112,
+                title: "AP Environmental Science Study Guide",
+                author: "Dr. Amanda Foster",
+                subject: "science",
+                type: "study-guide",
+                description: "Comprehensive study guide for AP Environmental Science covering ecosystems, pollution, and sustainability.",
+                cover: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMjdBRTYwIi8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMiIgZmlsbD0iI0ZGRkZGRiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkFQIEVudmlyb25tZW50YWw8L3RleHQ+Cjwvc3ZnPg==",
+                available: true,
+                formats: ["digital", "physical"],
+                dueDate: null,
+                popularity: 81
             }
         ];
     }
@@ -214,11 +437,12 @@ class GrabABook {
             this.submitBookDonation();
         });
 
-        // Magazine subscription form
-        document.getElementById('magazine-subscription-form').addEventListener('submit', (e) => {
+        // Magazine request form
+        document.getElementById('magazine-request-form').addEventListener('submit', (e) => {
             e.preventDefault();
-            this.submitMagazineSubscription();
+            this.submitMagazineRequest();
         });
+
     }
 
     // Navigation functions
@@ -249,6 +473,7 @@ class GrabABook {
         this.updateNavActive('ap-classes');
         this.loadAPBooks();
     }
+
 
     showMagazine() {
         this.showPage('magazine');
@@ -793,22 +1018,26 @@ class GrabABook {
         form.reset();
     }
 
-    // Magazine subscription functions
-    submitMagazineSubscription() {
-        const form = document.getElementById('magazine-subscription-form');
+    // Free magazine request functions
+    submitMagazineRequest() {
+        const form = document.getElementById('magazine-request-form');
         const formData = new FormData(form);
-        const subscriptionType = form.querySelector('select').value;
+        const magazineType = form.querySelector('select').value;
         
         // Simulate form submission
-        const subscriptionTypes = {
-            'monthly': 'Monthly ($2/month)',
-            'quarterly': 'Quarterly ($5/3 months)',
-            'yearly': 'Yearly ($15/year)'
+        const magazineTypes = {
+            'ap': 'AP Class Materials',
+            'children-fantasy': 'Children\'s Fantasy & Adventure',
+            'historical-nonfiction': 'Historical Non-Fiction',
+            'fiction': 'Fiction & Literature',
+            'education': 'Educational & Textbooks',
+            'general': 'General Catalog (All Books)'
         };
         
-        this.showNotification('success', `Thank you for subscribing to Grab-a-Book Magazine! You've selected ${subscriptionTypes[subscriptionType]}. Your first magazine will arrive within 7-10 business days.`);
+        this.showNotification('success', `Thank you for requesting your free ${magazineTypes[magazineType]} magazine! Your magazine will arrive within 7-10 business days.`);
         form.reset();
     }
+
 
     // User authentication (simplified for demo)
     showLogin() {
