@@ -5,6 +5,7 @@ class GrabABook {
         this.books = [];
         this.apBooks = [];
         this.checkedOutBooks = [];
+        this.readingHistory = []; // Store previously read books
         this.currentPage = 'home';
         this.lateFees = 0;
         this.apiBaseUrl = 'http://localhost:5000/api'; // Update this to match your API URL
@@ -636,13 +637,35 @@ class GrabABook {
         const myBooksContainer = document.getElementById('checked-out-books');
         const userBooks = [...this.books, ...this.apBooks].filter(book => !book.available);
         
-        // Count books by format
-        const digitalBooks = userBooks.filter(book => book.formats.includes('digital'));
-        const physicalBooks = userBooks.filter(book => book.formats.includes('physical'));
+        // Count books by delivery method
+        const digitalBooks = userBooks.filter(book => book.deliveryMethod === 'digital');
+        const physicalBooks = userBooks.filter(book => book.deliveryMethod === 'physical');
+        
+        // Categorize books by due date status
+        const today = new Date();
+        const threeDaysFromNow = new Date();
+        threeDaysFromNow.setDate(today.getDate() + 3);
+        
+        const overdueBooks = userBooks.filter(book => {
+            if (!book.dueDate) return false;
+            return new Date(book.dueDate) < today;
+        });
+        
+        const dueSoonBooks = userBooks.filter(book => {
+            if (!book.dueDate) return false;
+            const dueDate = new Date(book.dueDate);
+            return dueDate >= today && dueDate <= threeDaysFromNow;
+        });
+        
+        const upcomingBooks = userBooks.filter(book => {
+            if (!book.dueDate) return false;
+            const dueDate = new Date(book.dueDate);
+            return dueDate > threeDaysFromNow;
+        });
         
         const statsHtml = `
             <div class="row mb-4">
-                <div class="col-md-6">
+                <div class="col-md-3">
                     <div class="card bg-light">
                         <div class="card-body text-center">
                             <h5 class="card-title">Digital Books</h5>
@@ -651,7 +674,7 @@ class GrabABook {
                         </div>
                     </div>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-3">
                     <div class="card bg-light">
                         <div class="card-body text-center">
                             <h5 class="card-title">Physical Books</h5>
@@ -660,10 +683,34 @@ class GrabABook {
                         </div>
                     </div>
                 </div>
+                <div class="col-md-3">
+                    <div class="card bg-light">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Currently Reading</h5>
+                            <h3 class="text-success">${userBooks.length}</h3>
+                            <small class="text-muted">Total checked out</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card ${dueSoonBooks.length > 0 ? 'bg-warning' : 'bg-light'}">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Due Soon</h5>
+                            <h3>${dueSoonBooks.length}</h3>
+                            <small>Within 3 days</small>
+                        </div>
+                    </div>
+                </div>
             </div>
+            ${overdueBooks.length > 0 ? `
+                <div class="alert alert-danger mb-4">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Warning:</strong> You have ${overdueBooks.length} overdue book(s). Please return them immediately to avoid additional late fees.
+                </div>
+            ` : ''}
         `;
         
-        if (userBooks.length === 0) {
+        if (userBooks.length === 0 && this.readingHistory.length === 0) {
             myBooksContainer.innerHTML = `
                 <div class="col-12">
                     <div class="alert alert-info text-center">
@@ -675,9 +722,72 @@ class GrabABook {
                 </div>
             `;
         } else {
-            myBooksContainer.innerHTML = statsHtml + userBooks.map(book => 
-                this.createBookCard(book, 'my-books')
-            ).join('');
+            let content = statsHtml;
+            
+            // Overdue books section
+            if (overdueBooks.length > 0) {
+                content += `
+                    <div class="col-12 mb-4">
+                        <h4 class="text-danger mb-3">
+                            <i class="fas fa-exclamation-triangle me-2"></i>Overdue Books (${overdueBooks.length})
+                        </h4>
+                        <div class="row">
+                            ${overdueBooks.map(book => this.createBookCard(book, 'my-books')).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Due soon books section
+            if (dueSoonBooks.length > 0) {
+                content += `
+                    <div class="col-12 mb-4">
+                        <h4 class="text-warning mb-3">
+                            <i class="fas fa-clock me-2"></i>Due Soon (${dueSoonBooks.length})
+                        </h4>
+                        <div class="row">
+                            ${dueSoonBooks.map(book => this.createBookCard(book, 'my-books')).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Current reads section (all checked out books)
+            if (userBooks.length > 0) {
+                // Only show books that aren't in overdue or due soon sections
+                const currentReadsBooks = userBooks.filter(book => {
+                    return !overdueBooks.includes(book) && !dueSoonBooks.includes(book);
+                });
+                
+                if (currentReadsBooks.length > 0) {
+                    content += `
+                        <div class="col-12 mb-4">
+                            <h4 class="text-success mb-3">
+                                <i class="fas fa-book-open me-2"></i>Currently Reading (${userBooks.length})
+                            </h4>
+                            <div class="row">
+                                ${currentReadsBooks.map(book => this.createBookCard(book, 'my-books')).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+            
+            // Reading history section
+            if (this.readingHistory.length > 0) {
+                content += `
+                    <div class="col-12 mb-4">
+                        <h4 class="text-primary mb-3">
+                            <i class="fas fa-history me-2"></i>Reading History (${this.readingHistory.length})
+                        </h4>
+                        <div class="row">
+                            ${this.readingHistory.map(historyItem => this.createHistoryCard(historyItem)).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            myBooksContainer.innerHTML = content;
         }
     }
 
@@ -716,6 +826,43 @@ class GrabABook {
                                     <i class="fas fa-info-circle me-1"></i>Details
                                 </button>
                                 ${actionButton}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    createHistoryCard(historyItem) {
+        const book = historyItem.book;
+        const checkedOutDate = new Date(historyItem.checkedOutDate).toLocaleDateString();
+        const returnedDate = new Date(historyItem.returnedDate).toLocaleDateString();
+        const wasOverdue = historyItem.wasOverdue;
+        
+        return `
+            <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+                <div class="card h-100 book-card opacity-75">
+                    <img src="${book.cover}" class="card-img-top" alt="${book.title}" style="height: 250px; object-fit: cover;">
+                    <div class="card-body d-flex flex-column">
+                        <h6 class="card-title">${book.title}</h6>
+                        <p class="card-text text-muted small">by ${book.author}</p>
+                        <div class="mt-auto">
+                            <div class="mb-2">
+                                <small class="text-muted">
+                                    <i class="fas fa-calendar me-1"></i>Checked out: ${checkedOutDate}
+                                </small>
+                            </div>
+                            <div class="mb-2">
+                                <small class="text-muted">
+                                    <i class="fas fa-calendar-check me-1"></i>Returned: ${returnedDate}
+                                </small>
+                            </div>
+                            ${wasOverdue ? '<span class="badge bg-danger mb-2">Was Overdue</span>' : '<span class="badge bg-success mb-2">Returned On Time</span>'}
+                            <div class="d-flex gap-2 mt-2">
+                                <button class="btn btn-outline-primary btn-sm flex-fill" onclick="grabABook.checkoutBook(${book.id})">
+                                    <i class="fas fa-redo me-1"></i>Read Again
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -945,6 +1092,14 @@ class GrabABook {
             this.books.find(b => b.id === bookId);
         if (!book) return;
 
+        // Check if user has overdue books - prevent checkout if they do
+        const overdueBooks = this.getOverdueBooks();
+        if (overdueBooks.length > 0) {
+            this.showNotification('error', `You cannot check out books because you have ${overdueBooks.length} overdue book(s). Please return them first.`);
+            bootstrap.Modal.getInstance(document.getElementById('checkoutModal')).hide();
+            return;
+        }
+
         const deliveryMethod = document.querySelector('input[name="deliveryMethod"]:checked').value;
         const checkoutPeriodSelect = document.querySelector('select');
         const checkoutPeriod = checkoutPeriodSelect ? parseInt(checkoutPeriodSelect.value) : 14;
@@ -970,6 +1125,8 @@ class GrabABook {
         // Update book status
         book.available = false;
         book.dueDate = dueDate.toISOString().split('T')[0];
+        book.deliveryMethod = deliveryMethod; // Store the delivery method
+        book.checkedOutDate = new Date().toISOString(); // Store checkout date for history
         
         // Show success message
         this.showNotification('success', `Successfully checked out "${book.title}"! ${deliveryMethod === 'digital' ? 'Digital copy is now available.' : 'Physical copy will be delivered in 3-5 days.'}`);
@@ -988,25 +1145,25 @@ class GrabABook {
     }
 
     checkCheckoutLimits(deliveryMethod) {
-        // Count current checked out books by format
+        // Count current checked out books by their delivery method
         const checkedOutBooks = [...this.books, ...this.apBooks].filter(book => !book.available);
         
         const digitalCount = checkedOutBooks.filter(book => 
-            book.formats.includes('digital') && deliveryMethod === 'digital'
+            book.deliveryMethod === 'digital'
         ).length;
         
         const physicalCount = checkedOutBooks.filter(book => 
-            book.formats.includes('physical') && deliveryMethod === 'physical'
+            book.deliveryMethod === 'physical'
         ).length;
         
         // Check limits
         if (deliveryMethod === 'digital' && digitalCount >= 5) {
-            this.showNotification('warning', 'You have reached the limit of 5 digital books. Please return some books before checking out more digital copies.');
+            this.showNotification('warning', `You have reached the limit of 5 digital books (currently have ${digitalCount}). Please return some books before checking out more digital copies.`);
             return false;
         }
         
         if (deliveryMethod === 'physical' && physicalCount >= 3) {
-            this.showNotification('warning', 'You have reached the limit of 3 physical books. Please return some books before checking out more physical copies.');
+            this.showNotification('warning', `You have reached the limit of 3 physical books (currently have ${physicalCount}). Please return some books before checking out more physical copies.`);
             return false;
         }
         
@@ -1018,8 +1175,26 @@ class GrabABook {
         if (!book) return;
 
         if (confirm(`Return "${book.title}"?`)) {
+            const wasOverdue = book.dueDate && new Date(book.dueDate) < new Date();
+            
+            // Add to reading history
+            const historyItem = {
+                book: {
+                    id: book.id,
+                    title: book.title,
+                    author: book.author,
+                    cover: book.cover,
+                    category: book.category || book.subject,
+                    description: book.description
+                },
+                checkedOutDate: book.checkedOutDate || new Date(Date.now() - (14 * 24 * 60 * 60 * 1000)).toISOString(), // Default to 14 days ago if not set
+                returnedDate: new Date().toISOString(),
+                wasOverdue: wasOverdue
+            };
+            this.readingHistory.unshift(historyItem); // Add to beginning of array
+            
             // Check if book is overdue and remove late fees
-            if (book.dueDate && new Date(book.dueDate) < new Date()) {
+            if (wasOverdue) {
                 const daysOverdue = Math.ceil((new Date() - new Date(book.dueDate)) / (1000 * 60 * 60 * 24));
                 const lateFee = daysOverdue * 0.50; // $0.50 per day
                 this.lateFees = Math.max(0, this.lateFees - lateFee);
@@ -1030,6 +1205,8 @@ class GrabABook {
             
             book.available = true;
             book.dueDate = null;
+            book.deliveryMethod = null; // Clear delivery method
+            book.checkedOutDate = null; // Clear checkout date
             this.updateLateFees();
             this.loadMyBooks();
         }
@@ -1169,9 +1346,77 @@ class GrabABook {
 
     checkUserSession() {
         // In a real app, this would check for stored session/token
-        // For demo, we'll simulate a logged-in user
+        // For demo, we'll simulate a logged-in user with realistic checked-out books
         this.currentUser = { id: 1, name: 'Demo User' };
+        
+        // Set up demo user's checked-out books: 5 digital, 3 physical
+        this.setupDemoUserBooks();
+        
         this.updateUserInterface();
+    }
+
+    setupDemoUserBooks() {
+        // First, make sure ALL books are available (clear any existing checkouts)
+        [...this.books, ...this.apBooks].forEach(book => {
+            book.available = true;
+            book.dueDate = null;
+            book.deliveryMethod = null;
+        });
+
+        // Calculate due dates
+        const getDueDate = (daysFromNow) => {
+            const date = new Date();
+            date.setDate(date.getDate() + daysFromNow);
+            return date.toISOString().split('T')[0];
+        };
+
+        // Mark ONLY 5 digital books as checked out (different due dates)
+        const digitalBooks = [
+            { id: 1, days: 7 },   // The Great Gatsby - due in 1 week
+            { id: 3, days: 14 },  // To Kill a Mockingbird - due in 2 weeks
+            { id: 5, days: 10 },  // Pride and Prejudice - due in 10 days
+            { id: 101, days: 21 }, // AP Calculus AB Textbook - due in 3 weeks
+            { id: 103, days: 5 }   // AP English Literature Study Guide - due in 5 days
+        ];
+
+        digitalBooks.forEach(({ id, days }) => {
+            const book = this.books.find(b => b.id === id) || this.apBooks.find(b => b.id === id);
+            if (book) {
+                book.available = false;
+                book.dueDate = getDueDate(days);
+                book.deliveryMethod = 'digital';
+                // Set checkout date (assume it was checked out when the due date period started)
+                const checkoutDate = new Date();
+                checkoutDate.setDate(checkoutDate.getDate() - (21 - days)); // Adjusted based on due date
+                book.checkedOutDate = checkoutDate.toISOString();
+            }
+        });
+
+        // Mark ONLY 3 physical books as checked out (different due dates)
+        const physicalBooks = [
+            { id: 7, days: 12 },  // The Catcher in the Rye - due in 12 days
+            { id: 9, days: 18 },  // Brave New World - due in 18 days
+            { id: 105, days: 21 } // AP Biology Textbook - due in 3 weeks
+        ];
+
+        physicalBooks.forEach(({ id, days }) => {
+            const book = this.books.find(b => b.id === id) || this.apBooks.find(b => b.id === id);
+            if (book) {
+                book.available = false;
+                book.dueDate = getDueDate(days);
+                book.deliveryMethod = 'physical';
+                // Set checkout date (assume it was checked out when the due date period started)
+                const checkoutDate = new Date();
+                checkoutDate.setDate(checkoutDate.getDate() - (21 - days)); // Adjusted based on due date
+                book.checkedOutDate = checkoutDate.toISOString();
+            }
+        });
+
+        // Verify: Count the checked-out books
+        const checkedOut = [...this.books, ...this.apBooks].filter(b => !b.available);
+        console.log(`Demo user setup: ${checkedOut.length} total books checked out`);
+        console.log(`- Digital: ${checkedOut.filter(b => b.deliveryMethod === 'digital').length}`);
+        console.log(`- Physical: ${checkedOut.filter(b => b.deliveryMethod === 'physical').length}`);
     }
 
     updateUserInterface() {
@@ -1413,11 +1658,27 @@ class GrabABook {
                     <td>${dueDate.toLocaleDateString()}</td>
                     <td><span class="badge bg-danger">${daysOverdue} days</span></td>
                     <td>$${lateFee.toFixed(2)}</td>
+                    <td>
+                        <button class="btn btn-sm btn-warning" onclick="grabABook.sendOverdueNotice(${book.id}, '${book.type || 'regular'}')">
+                            <i class="fas fa-envelope me-1"></i>Send Notice
+                        </button>
+                    </td>
                 </tr>
             `;
         }
         
         document.getElementById('overdue-books-content').innerHTML = `
+            <div class="alert alert-warning mb-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>${overdueBooks.length} overdue book(s) found.</strong>
+                    </div>
+                    <button class="btn btn-sm btn-primary" onclick="grabABook.sendAllOverdueNotices()">
+                        <i class="fas fa-paper-plane me-1"></i>Send All Notices
+                    </button>
+                </div>
+            </div>
             <div class="table-responsive">
                 <table class="table table-striped">
                     <thead>
@@ -1427,6 +1688,7 @@ class GrabABook {
                             <th>Due Date</th>
                             <th>Days Overdue</th>
                             <th>Late Fee</th>
+                            <th>Action</th>
                         </tr>
                     </thead>
                     <tbody>${tableRows}</tbody>
@@ -1447,6 +1709,20 @@ class GrabABook {
             `;
             return;
         }
+        
+        // Calculate donation statistics
+        let totalMoneyDonations = 0;
+        let totalMoneyAmount = 0;
+        let totalBookDonations = 0;
+        
+        donations.forEach(donation => {
+            if (donation.type === 'money') {
+                totalMoneyDonations++;
+                totalMoneyAmount += parseFloat(donation.amount || 0);
+            } else if (donation.type === 'book') {
+                totalBookDonations++;
+            }
+        });
         
         // Simplified content generation - show only 5 most recent
         let tableRows = '';
@@ -1469,6 +1745,42 @@ class GrabABook {
         }
         
         document.getElementById('donations-content').innerHTML = `
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="card bg-success bg-gradient text-white">
+                        <div class="card-body text-center">
+                            <h3 class="mb-0">$${totalMoneyAmount.toFixed(2)}</h3>
+                            <small>Total Money Donations</small>
+                            <div class="mt-2">
+                                <small>${totalMoneyDonations} donation(s)</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-info bg-gradient text-white">
+                        <div class="card-body text-center">
+                            <h3 class="mb-0">${totalBookDonations}</h3>
+                            <small>Total Book Donations</small>
+                            <div class="mt-2">
+                                <small>${totalBookDonations} book(s) donated</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-primary bg-gradient text-white">
+                        <div class="card-body text-center">
+                            <h3 class="mb-0">${donations.length}</h3>
+                            <small>Total Donations</small>
+                            <div class="mt-2">
+                                <small>All types combined</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <h5 class="mb-3">Recent Donations</h5>
             <div class="table-responsive">
                 <table class="table table-striped">
                     <thead>
@@ -1482,6 +1794,12 @@ class GrabABook {
                     </thead>
                     <tbody>${tableRows}</tbody>
                 </table>
+            </div>
+            <div class="mt-3">
+                <small class="text-muted">
+                    <i class="fas fa-info-circle me-1"></i>
+                    Showing ${recentDonations.length} most recent donation(s) out of ${donations.length} total.
+                </small>
             </div>
         `;
     }
@@ -1678,6 +1996,234 @@ class GrabABook {
                 </small>
             </div>
         `;
+    }
+
+    sendOverdueNotice(bookId, type = 'regular') {
+        const book = type === 'ap' ? 
+            this.apBooks.find(b => b.id === bookId) : 
+            this.books.find(b => b.id === bookId);
+        
+        if (!book) {
+            this.showNotification('error', 'Book not found.');
+            return;
+        }
+        
+        const dueDate = new Date(book.dueDate);
+        const today = new Date();
+        const daysOverdue = Math.ceil((today - dueDate) / (1000 * 60 * 60 * 24));
+        const lateFee = daysOverdue * 0.50;
+        
+        // Show modal to select notification method
+        const modalHtml = `
+            <div class="modal fade" id="noticeModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">
+                                <i class="fas fa-envelope me-2"></i>Send Overdue Notice
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <h6 class="mb-3">Book Details:</h6>
+                            <p><strong>Title:</strong> ${book.title}</p>
+                            <p><strong>Author:</strong> ${book.author}</p>
+                            <p><strong>Due Date:</strong> ${dueDate.toLocaleDateString()}</p>
+                            <p><strong>Days Overdue:</strong> <span class="badge bg-danger">${daysOverdue} days</span></p>
+                            <p><strong>Late Fee:</strong> $${lateFee.toFixed(2)}</p>
+                            
+                            <hr>
+                            
+                            <h6 class="mb-3">Select Notification Method:</h6>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="radio" name="noticeMethod" id="emailNotice" value="email" checked>
+                                <label class="form-check-label" for="emailNotice">
+                                    <i class="fas fa-at me-1"></i>Send Email Notice
+                                </label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="radio" name="noticeMethod" id="mailNotice" value="mail">
+                                <label class="form-check-label" for="mailNotice">
+                                    <i class="fas fa-envelope me-1"></i>Send Physical Mail Notice
+                                </label>
+                            </div>
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="radio" name="noticeMethod" id="bothNotice" value="both">
+                                <label class="form-check-label" for="bothNotice">
+                                    <i class="fas fa-share-nodes me-1"></i>Send Both Email and Mail
+                                </label>
+                            </div>
+                            
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <small>The user will be notified about their overdue book and the late fee amount.</small>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-primary" onclick="grabABook.confirmSendNotice(${bookId}, '${type}')">
+                                <i class="fas fa-paper-plane me-1"></i>Send Notice
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Remove existing modal if present
+        const existingModal = document.getElementById('noticeModal');
+        if (existingModal) existingModal.remove();
+        
+        // Add modal to page
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('noticeModal'));
+        modal.show();
+    }
+
+    confirmSendNotice(bookId, type = 'regular') {
+        const book = type === 'ap' ? 
+            this.apBooks.find(b => b.id === bookId) : 
+            this.books.find(b => b.id === bookId);
+        
+        if (!book) return;
+        
+        const noticeMethod = document.querySelector('input[name="noticeMethod"]:checked').value;
+        const dueDate = new Date(book.dueDate);
+        const today = new Date();
+        const daysOverdue = Math.ceil((today - dueDate) / (1000 * 60 * 60 * 24));
+        const lateFee = daysOverdue * 0.50;
+        
+        // In a real application, this would send to an API endpoint
+        // For demo purposes, we'll simulate the notification
+        let methodText = '';
+        if (noticeMethod === 'email') {
+            methodText = 'email';
+        } else if (noticeMethod === 'mail') {
+            methodText = 'physical mail';
+        } else {
+            methodText = 'email and physical mail';
+        }
+        
+        console.log('Sending overdue notice:', {
+            book: book.title,
+            method: noticeMethod,
+            daysOverdue: daysOverdue,
+            lateFee: lateFee,
+            userEmail: this.currentUser?.email || 'demo@example.com',
+            message: `Dear User,\n\nThis is a reminder that "${book.title}" by ${book.author} was due on ${dueDate.toLocaleDateString()}.\n\nIt is now ${daysOverdue} day(s) overdue.\nLate Fee: $${lateFee.toFixed(2)}\n\nPlease return the book as soon as possible to avoid additional fees.\n\nThank you,\nGrab-a-Book Team`
+        });
+        
+        this.showNotification('success', `Overdue notice for "${book.title}" sent via ${methodText}!`);
+        
+        // Close modal
+        bootstrap.Modal.getInstance(document.getElementById('noticeModal')).hide();
+    }
+
+    sendAllOverdueNotices() {
+        const overdueBooks = this.getOverdueBooks();
+        
+        if (overdueBooks.length === 0) {
+            this.showNotification('info', 'No overdue books to notify about.');
+            return;
+        }
+        
+        // Show confirmation modal
+        const modalHtml = `
+            <div class="modal fade" id="bulkNoticeModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header bg-warning">
+                            <h5 class="modal-title">
+                                <i class="fas fa-paper-plane me-2"></i>Send All Overdue Notices
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p><strong>You are about to send overdue notices for ${overdueBooks.length} book(s).</strong></p>
+                            
+                            <h6 class="mb-3">Select Notification Method:</h6>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="radio" name="bulkNoticeMethod" id="bulkEmailNotice" value="email" checked>
+                                <label class="form-check-label" for="bulkEmailNotice">
+                                    <i class="fas fa-at me-1"></i>Send Email Notices
+                                </label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="radio" name="bulkNoticeMethod" id="bulkMailNotice" value="mail">
+                                <label class="form-check-label" for="bulkMailNotice">
+                                    <i class="fas fa-envelope me-1"></i>Send Physical Mail Notices
+                                </label>
+                            </div>
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="radio" name="bulkNoticeMethod" id="bulkBothNotice" value="both">
+                                <label class="form-check-label" for="bulkBothNotice">
+                                    <i class="fas fa-share-nodes me-1"></i>Send Both Email and Mail
+                                </label>
+                            </div>
+                            
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <small>All users with overdue books will receive a notification.</small>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-primary" onclick="grabABook.confirmSendAllNotices()">
+                                <i class="fas fa-paper-plane me-1"></i>Send All Notices
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Remove existing modal if present
+        const existingModal = document.getElementById('bulkNoticeModal');
+        if (existingModal) existingModal.remove();
+        
+        // Add modal to page
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('bulkNoticeModal'));
+        modal.show();
+    }
+
+    confirmSendAllNotices() {
+        const overdueBooks = this.getOverdueBooks();
+        const noticeMethod = document.querySelector('input[name="bulkNoticeMethod"]:checked').value;
+        
+        let methodText = '';
+        if (noticeMethod === 'email') {
+            methodText = 'email';
+        } else if (noticeMethod === 'mail') {
+            methodText = 'physical mail';
+        } else {
+            methodText = 'email and physical mail';
+        }
+        
+        // In a real application, this would send to an API endpoint
+        // For demo purposes, we'll log the notifications
+        overdueBooks.forEach(book => {
+            const dueDate = new Date(book.dueDate);
+            const today = new Date();
+            const daysOverdue = Math.ceil((today - dueDate) / (1000 * 60 * 60 * 24));
+            const lateFee = daysOverdue * 0.50;
+            
+            console.log('Sending bulk overdue notice:', {
+                book: book.title,
+                method: noticeMethod,
+                daysOverdue: daysOverdue,
+                lateFee: lateFee
+            });
+        });
+        
+        this.showNotification('success', `Sent ${overdueBooks.length} overdue notice(s) via ${methodText}!`);
+        
+        // Close modal
+        bootstrap.Modal.getInstance(document.getElementById('bulkNoticeModal')).hide();
     }
 }
 
