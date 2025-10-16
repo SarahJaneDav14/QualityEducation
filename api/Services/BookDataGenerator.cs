@@ -239,13 +239,43 @@ namespace GrabABook.API.Services
 
         private string GenerateCoverImage()
         {
-            // Generate a simple colored rectangle with book title
-            var colors = new[] { "4A90E2", "27AE60", "F39C12", "9B59B6", "E74C3C", "3498DB", "E67E22", "2ECC71", "9B59B6", "34495E" };
-            var color = colors[_random.Next(colors.Length)];
+            // Generate a more realistic book cover design
+            var colorSchemes = new[] { 
+                new { bg = "2C3E50", accent = "E74C3C", text = "ECF0F1" }, // Dark blue with red accent
+                new { bg = "8E44AD", accent = "F39C12", text = "FFFFFF" }, // Purple with orange accent
+                new { bg = "27AE60", accent = "E67E22", text = "FFFFFF" }, // Green with orange accent
+                new { bg = "C0392B", accent = "F1C40F", text = "FFFFFF" }, // Red with yellow accent
+                new { bg = "2980B9", accent = "E74C3C", text = "FFFFFF" }, // Blue with red accent
+                new { bg = "7F8C8D", accent = "F39C12", text = "FFFFFF" }, // Gray with orange accent
+                new { bg = "D35400", accent = "2ECC71", text = "FFFFFF" }, // Orange with green accent
+                new { bg = "34495E", accent = "E67E22", text = "ECF0F1" }, // Dark gray with orange accent
+                new { bg = "9B59B6", accent = "F1C40F", text = "FFFFFF" }, // Purple with yellow accent
+                new { bg = "1ABC9C", accent = "E74C3C", text = "FFFFFF" }  // Teal with red accent
+            };
+            
+            var scheme = colorSchemes[_random.Next(colorSchemes.Length)];
             
             var svg = $@"<svg width=""200"" height=""300"" xmlns=""http://www.w3.org/2000/svg"">
-  <rect width=""100%"" height=""100%"" fill=""#{color}""/>
-  <text x=""50%"" y=""50%"" font-family=""Arial"" font-size=""14"" fill=""#FFFFFF"" text-anchor=""middle"" dy="".3em"">Book</text>
+  <!-- Background -->
+  <rect width=""100%"" height=""100%"" fill=""#{scheme.bg}""/>
+  
+  <!-- Decorative border -->
+  <rect x=""10"" y=""10"" width=""180"" height=""280"" fill=""none"" stroke=""#{scheme.accent}"" stroke-width=""2"" rx=""5""/>
+  
+  <!-- Central design element -->
+  <circle cx=""100"" cy=""120"" r=""30"" fill=""#{scheme.accent}"" opacity=""0.3""/>
+  <rect x=""85"" y=""105"" width=""30"" height=""30"" fill=""#{scheme.accent}"" opacity=""0.7"" transform=""rotate(45 100 120)""/>
+  
+  <!-- Title area -->
+  <rect x=""20"" y=""200"" width=""160"" height=""40"" fill=""#{scheme.accent}"" opacity=""0.8"" rx=""3""/>
+  
+  <!-- Decorative lines -->
+  <line x1=""30"" y1=""50"" x2=""170"" y2=""50"" stroke=""#{scheme.accent}"" stroke-width=""2"" opacity=""0.6""/>
+  <line x1=""30"" y1=""60"" x2=""160"" y2=""60"" stroke=""#{scheme.accent}"" stroke-width=""1"" opacity=""0.4""/>
+  <line x1=""30"" y1=""70"" x2=""150"" y2=""70"" stroke=""#{scheme.accent}"" stroke-width=""1"" opacity=""0.3""/>
+  
+  <!-- Bottom accent -->
+  <rect x=""20"" y=""260"" width=""160"" height=""20"" fill=""#{scheme.accent}"" opacity=""0.5"" rx=""2""/>
 </svg>";
             
             var bytes = System.Text.Encoding.UTF8.GetBytes(svg);

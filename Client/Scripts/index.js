@@ -8,6 +8,8 @@ class GrabABook {
         this.currentPage = 'home';
         this.lateFees = 0;
         this.apiBaseUrl = 'http://localhost:5000/api'; // Update this to match your API URL
+        this.isAdmin = false;
+        this.donations = []; // Store donations data
         this.init();
     }
 
@@ -30,7 +32,21 @@ class GrabABook {
             if (booksResponse.ok && apBooksResponse.ok) {
                 this.books = await booksResponse.json();
                 this.apBooks = await apBooksResponse.json();
-                console.log('Successfully loaded books from API');
+                
+                // Convert formats from comma-separated string to array
+                this.books = this.books.map(book => ({
+                    ...book,
+                    formats: typeof book.formats === 'string' ? book.formats.split(',') : book.formats
+                }));
+                this.apBooks = this.apBooks.map(book => ({
+                    ...book,
+                    formats: typeof book.formats === 'string' ? book.formats.split(',') : book.formats
+                }));
+                
+                console.log('Successfully loaded books from API', {
+                    books: this.books.length,
+                    apBooks: this.apBooks.length
+                });
             } else {
                 throw new Error('API not responding');
             }
@@ -618,7 +634,34 @@ class GrabABook {
 
     loadMyBooks() {
         const myBooksContainer = document.getElementById('checked-out-books');
-        const userBooks = this.books.filter(book => !book.available);
+        const userBooks = [...this.books, ...this.apBooks].filter(book => !book.available);
+        
+        // Count books by format
+        const digitalBooks = userBooks.filter(book => book.formats.includes('digital'));
+        const physicalBooks = userBooks.filter(book => book.formats.includes('physical'));
+        
+        const statsHtml = `
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card bg-light">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Digital Books</h5>
+                            <h3 class="text-primary">${digitalBooks.length}/5</h3>
+                            <small class="text-muted">Limit: 5 digital books</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card bg-light">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Physical Books</h5>
+                            <h3 class="text-warning">${physicalBooks.length}/3</h3>
+                            <small class="text-muted">Limit: 3 physical books</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
         
         if (userBooks.length === 0) {
             myBooksContainer.innerHTML = `
@@ -627,12 +670,12 @@ class GrabABook {
                         <i class="fas fa-book-open fa-3x mb-3"></i>
                         <h4>No books checked out</h4>
                         <p>Start exploring our collection to find your next great read!</p>
-                        <button class="btn btn-primary" onclick="showBrowse()">Browse Books</button>
+                        <button class="btn btn-primary" onclick="grabABook.showBrowse()">Browse Books</button>
                     </div>
                 </div>
             `;
         } else {
-            myBooksContainer.innerHTML = userBooks.map(book => 
+            myBooksContainer.innerHTML = statsHtml + userBooks.map(book => 
                 this.createBookCard(book, 'my-books')
             ).join('');
         }
@@ -903,11 +946,26 @@ class GrabABook {
         if (!book) return;
 
         const deliveryMethod = document.querySelector('input[name="deliveryMethod"]:checked').value;
-        const checkoutPeriod = document.querySelector('select').value;
+        const checkoutPeriodSelect = document.querySelector('select');
+        const checkoutPeriod = checkoutPeriodSelect ? parseInt(checkoutPeriodSelect.value) : 14;
+        
+        // Check checkout limits
+        if (!this.checkCheckoutLimits(deliveryMethod)) {
+            return;
+        }
+        
+        // Validate checkout period
+        const validPeriod = isNaN(checkoutPeriod) || checkoutPeriod <= 0 ? 14 : checkoutPeriod;
         
         // Calculate due date
         const dueDate = new Date();
-        dueDate.setDate(dueDate.getDate() + parseInt(checkoutPeriod));
+        dueDate.setDate(dueDate.getDate() + validPeriod);
+        
+        // Validate the date is valid
+        if (isNaN(dueDate.getTime())) {
+            console.error('Invalid due date calculated');
+            dueDate.setDate(new Date().getDate() + 14); // fallback to 14 days
+        }
         
         // Update book status
         book.available = false;
@@ -927,6 +985,32 @@ class GrabABook {
         } else if (this.currentPage === 'ap-classes') {
             this.loadAPBooks();
         }
+    }
+
+    checkCheckoutLimits(deliveryMethod) {
+        // Count current checked out books by format
+        const checkedOutBooks = [...this.books, ...this.apBooks].filter(book => !book.available);
+        
+        const digitalCount = checkedOutBooks.filter(book => 
+            book.formats.includes('digital') && deliveryMethod === 'digital'
+        ).length;
+        
+        const physicalCount = checkedOutBooks.filter(book => 
+            book.formats.includes('physical') && deliveryMethod === 'physical'
+        ).length;
+        
+        // Check limits
+        if (deliveryMethod === 'digital' && digitalCount >= 5) {
+            this.showNotification('warning', 'You have reached the limit of 5 digital books. Please return some books before checking out more digital copies.');
+            return false;
+        }
+        
+        if (deliveryMethod === 'physical' && physicalCount >= 3) {
+            this.showNotification('warning', 'You have reached the limit of 3 physical books. Please return some books before checking out more physical copies.');
+            return false;
+        }
+        
+        return true;
     }
 
     returnBook(bookId) {
@@ -993,6 +1077,15 @@ class GrabABook {
     // Donation functions
     donateAmount(amount) {
         if (confirm(`Donate $${amount} to Grab-a-Book?`)) {
+            // Store donation
+            this.donations.push({
+                type: 'money',
+                amount: amount,
+                donorName: 'Anonymous',
+                createdAt: new Date().toISOString(),
+                status: 'Completed'
+            });
+            
             this.showNotification('success', `Thank you for your $${amount} donation to Grab-a-Book! Your contribution helps us provide free books to students in need.`);
         }
     }
@@ -1001,6 +1094,15 @@ class GrabABook {
         const amount = parseFloat(document.getElementById('custom-donation').value);
         if (amount && amount > 0) {
             if (confirm(`Donate $${amount} to Grab-a-Book?`)) {
+                // Store donation
+                this.donations.push({
+                    type: 'money',
+                    amount: amount,
+                    donorName: 'Anonymous',
+                    createdAt: new Date().toISOString(),
+                    status: 'Completed'
+                });
+                
                 this.showNotification('success', `Thank you for your $${amount} donation to Grab-a-Book! Your contribution helps us provide free books to students in need.`);
                 document.getElementById('custom-donation').value = '';
             }
@@ -1013,7 +1115,20 @@ class GrabABook {
         const form = document.getElementById('book-donation-form');
         const formData = new FormData(form);
         
-        // Simulate form submission
+        // Store book donation
+        this.donations.push({
+            type: 'book',
+            bookTitle: formData.get('bookTitle') || 'Book Donation',
+            bookAuthor: formData.get('bookAuthor') || 'Unknown',
+            bookCategory: formData.get('bookCategory') || 'General',
+            bookCondition: formData.get('bookCondition') || 'Good',
+            donorName: formData.get('donorName') || 'Anonymous',
+            donorEmail: formData.get('donorEmail') || '',
+            donorPhone: formData.get('donorPhone') || '',
+            createdAt: new Date().toISOString(),
+            status: 'Pending'
+        });
+        
         this.showNotification('success', 'Thank you for your book donation! We will contact you within 2-3 business days to arrange pickup or drop-off.');
         form.reset();
     }
@@ -1108,6 +1223,461 @@ class GrabABook {
         document.getElementById(toastId).addEventListener('hidden.bs.toast', () => {
             document.body.removeChild(toastContainer);
         });
+    }
+
+    // Admin functionality
+    showAdminLogin() {
+        const modal = new bootstrap.Modal(document.getElementById('adminLoginModal'));
+        modal.show();
+    }
+
+    loginAsAdmin() {
+        // Automatic admin login - no credentials needed for demo
+        this.isAdmin = true;
+        this.showAdminDashboard();
+        this.showNotification('success', 'Welcome, Admin! (Demo Mode)');
+    }
+
+    loginAdmin() {
+        const username = document.getElementById('admin-username').value;
+        const password = document.getElementById('admin-password').value;
+        
+        // Simple admin credentials (in production, this would be server-side)
+        if (username === 'admin' && password === 'admin123') {
+            this.isAdmin = true;
+            bootstrap.Modal.getInstance(document.getElementById('adminLoginModal')).hide();
+            this.showAdminDashboard();
+            this.showNotification('success', 'Welcome, Admin!');
+        } else {
+            this.showNotification('error', 'Invalid admin credentials');
+        }
+    }
+
+    logoutAdmin() {
+        this.isAdmin = false;
+        this.showHome();
+        this.showNotification('info', 'Logged out successfully');
+    }
+
+    showAdminDashboard() {
+        this.showPage('admin');
+        this.updateNavActive('admin');
+        this.loadAdminData();
+        
+        // Initialize Bootstrap tabs
+        setTimeout(() => {
+            const tabElements = document.querySelectorAll('#adminTabs button[data-bs-toggle="tab"]');
+            tabElements.forEach(tabElement => {
+                    tabElement.addEventListener('shown.bs.tab', (event) => {
+                        const target = event.target.getAttribute('data-bs-target');
+                        
+                        // Only load data if content is empty (first time viewing tab)
+                        if (target === '#overdue' && !document.getElementById('overdue-books-content').innerHTML) {
+                            this.loadOverdueBooks();
+                        } else if (target === '#donations' && !document.getElementById('donations-content').innerHTML) {
+                            this.loadDonations();
+                        } else if (target === '#popular' && !document.getElementById('popular-books-content').innerHTML) {
+                            this.loadPopularBooksByCategory();
+                        } else if (target === '#inventory' && !document.getElementById('inventory-content').innerHTML) {
+                            this.loadLibraryInventory();
+                        }
+                    });
+            });
+        }, 100);
+    }
+
+    loadAdminData() {
+        // Add some sample donations if none exist
+        if (this.donations.length === 0) {
+            this.donations = [
+                {
+                    type: 'money',
+                    amount: 25,
+                    donorName: 'John Smith',
+                    createdAt: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
+                    status: 'Completed'
+                },
+                {
+                    type: 'money',
+                    amount: 50,
+                    donorName: 'Sarah Johnson',
+                    createdAt: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
+                    status: 'Completed'
+                },
+                {
+                    type: 'book',
+                    bookTitle: 'The Great Gatsby',
+                    bookAuthor: 'F. Scott Fitzgerald',
+                    bookCategory: 'literature',
+                    donorName: 'Mike Wilson',
+                    createdAt: new Date(Date.now() - 259200000).toISOString(), // 3 days ago
+                    status: 'Completed'
+                }
+            ];
+        }
+
+        // Make some books overdue for testing
+        this.makeSomeBooksOverdue();
+
+        
+        // Load popular books by category
+        this.loadPopularBooksByCategory();
+        
+        // Load overdue books
+        this.loadOverdueBooks();
+        
+        // Load donations
+        this.loadDonations();
+    }
+
+    makeSomeBooksOverdue() {
+        // Make first few checked out books overdue for demo purposes
+        const checkedOutBooks = [...this.books, ...this.apBooks].filter(book => !book.available);
+        const today = new Date();
+        
+        checkedOutBooks.slice(0, 3).forEach((book, index) => {
+            // Set due date to 5-10 days ago to make them overdue
+            const overdueDate = new Date(today.getTime() - (5 + index) * 24 * 60 * 60 * 1000);
+            book.dueDate = overdueDate.toISOString().split('T')[0];
+        });
+    }
+
+
+    loadPopularBooksByCategory() {
+        const allBooks = [...this.books, ...this.apBooks];
+        const categories = [...new Set(allBooks.map(book => book.category || book.subject))];
+        
+        let content = '';
+        
+        categories.forEach(category => {
+            const categoryBooks = allBooks.filter(book => (book.category || book.subject) === category);
+            const popularBooks = categoryBooks
+                .sort((a, b) => b.popularity - a.popularity)
+                .slice(0, 3);
+            
+            content += `
+                <div class="mb-4">
+                    <h6 class="text-primary">${category.charAt(0).toUpperCase() + category.slice(1)}</h6>
+                    <div class="row">
+                        ${popularBooks.map(book => `
+                            <div class="col-md-4 mb-2">
+                                <div class="card h-100">
+                                    <div class="card-body p-2">
+                                        <h6 class="card-title small">${book.title}</h6>
+                                        <p class="card-text small text-muted">by ${book.author}</p>
+                                        <span class="badge bg-info small">Popularity: ${book.popularity}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        });
+        
+        document.getElementById('popular-books-content').innerHTML = content;
+    }
+
+    loadOverdueBooks() {
+        // Use cached overdue books or calculate quickly
+        let overdueBooks = this.cachedOverdueBooks;
+        
+        if (!overdueBooks) {
+            overdueBooks = this.getOverdueBooks();
+            this.cachedOverdueBooks = overdueBooks; // Cache for faster loading
+        }
+        
+        if (overdueBooks.length === 0) {
+            document.getElementById('overdue-books-content').innerHTML = `
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle me-2"></i>No overdue books! Great job!
+                </div>
+            `;
+            return;
+        }
+        
+        // Simplified content generation
+        let tableRows = '';
+        const today = new Date();
+        
+        for (let i = 0; i < overdueBooks.length; i++) {
+            const book = overdueBooks[i];
+            const dueDate = new Date(book.dueDate);
+            const daysOverdue = Math.ceil((today - dueDate) / (1000 * 60 * 60 * 24));
+            const lateFee = daysOverdue * 0.50;
+            
+            tableRows += `
+                <tr>
+                    <td>${book.title}</td>
+                    <td>${book.author}</td>
+                    <td>${dueDate.toLocaleDateString()}</td>
+                    <td><span class="badge bg-danger">${daysOverdue} days</span></td>
+                    <td>$${lateFee.toFixed(2)}</td>
+                </tr>
+            `;
+        }
+        
+        document.getElementById('overdue-books-content').innerHTML = `
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Book Title</th>
+                            <th>Author</th>
+                            <th>Due Date</th>
+                            <th>Days Overdue</th>
+                            <th>Late Fee</th>
+                        </tr>
+                    </thead>
+                    <tbody>${tableRows}</tbody>
+                </table>
+            </div>
+        `;
+    }
+
+    loadDonations() {
+        // Use cached donations or load from memory
+        const donations = this.donations || [];
+        
+        if (donations.length === 0) {
+            document.getElementById('donations-content').innerHTML = `
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>No donations yet. Encourage users to support the library!
+                </div>
+            `;
+            return;
+        }
+        
+        // Simplified content generation - show only 5 most recent
+        let tableRows = '';
+        const recentDonations = donations.slice(-5); // Show only 5 most recent for faster loading
+        
+        for (let i = recentDonations.length - 1; i >= 0; i--) {
+            const donation = recentDonations[i];
+            const date = new Date(donation.createdAt || Date.now()).toLocaleDateString();
+            const amount = donation.type === 'money' ? `$${donation.amount}` : donation.bookTitle || 'Book';
+            
+            tableRows += `
+                <tr>
+                    <td>${date}</td>
+                    <td>${donation.type}</td>
+                    <td>${amount}</td>
+                    <td>${donation.donorName || 'Anonymous'}</td>
+                    <td><span class="badge bg-success">${donation.status || 'Completed'}</span></td>
+                </tr>
+            `;
+        }
+        
+        document.getElementById('donations-content').innerHTML = `
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Type</th>
+                            <th>Amount/Item</th>
+                            <th>Donor</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>${tableRows}</tbody>
+                </table>
+            </div>
+        `;
+    }
+
+    getOverdueBooks() {
+        const today = new Date();
+        return [...this.books, ...this.apBooks].filter(book => {
+            if (!book.dueDate || book.available) return false;
+            const dueDate = new Date(book.dueDate);
+            return today > dueDate;
+        });
+    }
+
+    loadLibraryInventory() {
+        // Combine all books and add copy tracking
+        const allBooks = [...this.books, ...this.apBooks];
+        const inventoryData = this.processInventoryData(allBooks);
+        
+        // Display inventory first
+        this.displayInventory(inventoryData);
+        
+        // Set up event listeners for filters and search after a short delay
+        setTimeout(() => {
+            this.setupInventoryFilters();
+        }, 100);
+    }
+
+    processInventoryData(allBooks) {
+        // Group books by title and author to track copies
+        const bookGroups = {};
+        
+        allBooks.forEach(book => {
+            const key = `${book.title}|${book.author}`;
+            if (!bookGroups[key]) {
+                bookGroups[key] = {
+                    title: book.title,
+                    author: book.author,
+                    category: book.category || book.subject,
+                    type: book.type || 'regular',
+                    totalCopies: 0,
+                    availableCopies: 0,
+                    checkedOutCopies: 0,
+                    books: []
+                };
+            }
+            
+            bookGroups[key].totalCopies++;
+            bookGroups[key].books.push(book);
+            
+            if (book.available) {
+                bookGroups[key].availableCopies++;
+            } else {
+                bookGroups[key].checkedOutCopies++;
+            }
+        });
+        
+        return Object.values(bookGroups);
+    }
+
+    setupInventoryFilters() {
+        console.log('Setting up inventory filters...');
+        
+        // Filter buttons
+        const filterButtons = document.querySelectorAll('input[name="inventory-filter"]');
+        console.log('Found filter buttons:', filterButtons.length);
+        
+        filterButtons.forEach(button => {
+            button.addEventListener('change', (e) => {
+                console.log('Filter changed to:', e.target.id);
+                this.filterInventory();
+            });
+        });
+        
+        // Search input
+        const searchInput = document.getElementById('inventory-search');
+        if (searchInput) {
+            console.log('Found search input');
+            searchInput.addEventListener('input', (e) => {
+                console.log('Search input changed:', e.target.value);
+                this.filterInventory();
+            });
+        } else {
+            console.log('Search input not found');
+        }
+    }
+
+    filterInventory() {
+        console.log('filterInventory called');
+        const allBooks = [...this.books, ...this.apBooks];
+        let filteredData = this.processInventoryData(allBooks);
+        console.log('Initial data count:', filteredData.length);
+        
+        // Apply availability filter
+        const selectedFilterElement = document.querySelector('input[name="inventory-filter"]:checked');
+        if (selectedFilterElement) {
+            const selectedFilter = selectedFilterElement.id;
+            console.log('Selected filter:', selectedFilter);
+            if (selectedFilter === 'available-books') {
+                filteredData = filteredData.filter(book => book.availableCopies > 0);
+                console.log('After available filter:', filteredData.length);
+            } else if (selectedFilter === 'checked-out-books') {
+                filteredData = filteredData.filter(book => book.checkedOutCopies > 0);
+                console.log('After checked-out filter:', filteredData.length);
+            }
+        }
+        
+        // Apply search filter
+        const searchInput = document.getElementById('inventory-search');
+        if (searchInput) {
+            const searchTerm = searchInput.value.toLowerCase();
+            if (searchTerm) {
+                console.log('Search term:', searchTerm);
+                filteredData = filteredData.filter(book => 
+                    book.title.toLowerCase().includes(searchTerm) || 
+                    book.author.toLowerCase().includes(searchTerm)
+                );
+                console.log('After search filter:', filteredData.length);
+            }
+        }
+        
+        this.displayInventory(filteredData);
+    }
+
+    displayInventory(inventoryData) {
+        if (inventoryData.length === 0) {
+            document.getElementById('inventory-content').innerHTML = `
+                <div class="alert alert-info text-center">
+                    <i class="fas fa-info-circle me-2"></i>No books found matching your criteria.
+                </div>
+            `;
+            return;
+        }
+        
+        // Sort by title
+        inventoryData.sort((a, b) => a.title.localeCompare(b.title));
+        
+        let tableRows = '';
+        
+        for (let i = 0; i < inventoryData.length; i++) {
+            const book = inventoryData[i];
+            const availabilityClass = book.availableCopies > 0 ? 'text-success' : 'text-warning';
+            const availabilityText = book.availableCopies > 0 ? 
+                `${book.availableCopies} available` : 'All checked out';
+            
+            tableRows += `
+                <tr>
+                    <td>
+                        <strong>${book.title}</strong><br>
+                        <small class="text-muted">by ${book.author}</small>
+                    </td>
+                    <td>
+                        <span class="badge bg-info">${book.category}</span>
+                        ${book.type ? `<br><span class="badge bg-secondary small">${book.type}</span>` : ''}
+                    </td>
+                    <td class="text-center">${book.totalCopies}</td>
+                    <td class="text-center ${availabilityClass}">${book.availableCopies}</td>
+                    <td class="text-center text-warning">${book.checkedOutCopies}</td>
+                    <td class="text-center">
+                        <div class="progress" style="height: 20px;">
+                            <div class="progress-bar bg-success" role="progressbar" 
+                                 style="width: ${(book.availableCopies / book.totalCopies) * 100}%">
+                                ${book.availableCopies}
+                            </div>
+                            <div class="progress-bar bg-warning" role="progressbar" 
+                                 style="width: ${(book.checkedOutCopies / book.totalCopies) * 100}%">
+                                ${book.checkedOutCopies}
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }
+        
+        document.getElementById('inventory-content').innerHTML = `
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Book Details</th>
+                            <th>Category/Type</th>
+                            <th class="text-center">Total Copies</th>
+                            <th class="text-center">Available</th>
+                            <th class="text-center">Checked Out</th>
+                            <th class="text-center">Availability</th>
+                        </tr>
+                    </thead>
+                    <tbody>${tableRows}</tbody>
+                </table>
+            </div>
+            <div class="mt-3">
+                <small class="text-muted">
+                    <i class="fas fa-info-circle me-1"></i>
+                    Showing ${inventoryData.length} book(s). Green indicates available copies, yellow indicates checked out copies.
+                </small>
+            </div>
+        `;
     }
 }
 
