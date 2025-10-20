@@ -5,6 +5,7 @@ namespace GrabABook.API.Models
         public int Id { get; set; }
         public string Type { get; set; } = string.Empty; // "money" or "book"
         public decimal Amount { get; set; } = 0; // for money donations
+        public string? PaymentMethod { get; set; } // for money donations
         public string? BookTitle { get; set; }
         public string? BookAuthor { get; set; }
         public string? BookCategory { get; set; }

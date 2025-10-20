@@ -80,3 +80,7 @@ C:\Users\sarah\Documents\MIS_321\Group Project\QualityEducation\api\obj\Debug\ne
 C:\Users\sarah\Documents\MIS_321\Group Project\QualityEducation\api\obj\Debug\net8.0\GrabABook.API.pdb
 C:\Users\sarah\Documents\MIS_321\Group Project\QualityEducation\api\obj\Debug\net8.0\GrabABook.API.genruntimeconfig.cache
 C:\Users\sarah\Documents\MIS_321\Group Project\QualityEducation\api\obj\Debug\net8.0\ref\GrabABook.API.dll
+C:\Users\sarah\Documents\MIS_321\Group Project\QualityEducation\api\bin\Debug\net8.0\runtimes\linux-musl-s390x\native\libe_sqlite3.so
+C:\Users\sarah\Documents\MIS_321\Group Project\QualityEducation\api\bin\Debug\net8.0\DocumentFormat.OpenXml.dll
+C:\Users\sarah\Documents\MIS_321\Group Project\QualityEducation\api\bin\Debug\net8.0\DocumentFormat.OpenXml.Framework.dll
+C:\Users\sarah\Documents\MIS_321\Group Project\QualityEducation\api\bin\Debug\net8.0\System.IO.Packaging.dll

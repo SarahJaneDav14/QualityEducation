@@ -448,6 +448,23 @@ class GrabABook {
             this.applyAPFilters();
         });
 
+        // Money donation form
+        document.getElementById('money-donation-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.submitMoneyDonation();
+        });
+
+        // Amount button click handlers
+        document.querySelectorAll('.amount-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const amount = e.target.getAttribute('data-amount');
+                document.getElementById('donation-amount').value = amount;
+                // Highlight selected button
+                document.querySelectorAll('.amount-btn').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+            });
+        });
+
         // Book donation form
         document.getElementById('book-donation-form').addEventListener('submit', (e) => {
             e.preventDefault();
@@ -1252,40 +1269,48 @@ class GrabABook {
     }
 
     // Donation functions
-    donateAmount(amount) {
-        if (confirm(`Donate $${amount} to Grab-a-Book?`)) {
-            // Store donation
-            this.donations.push({
-                type: 'money',
-                amount: amount,
-                donorName: 'Anonymous',
-                createdAt: new Date().toISOString(),
-                status: 'Completed'
-            });
-            
-            this.showNotification('success', `Thank you for your $${amount} donation to Grab-a-Book! Your contribution helps us provide free books to students in need.`);
-        }
-    }
+    submitMoneyDonation() {
+        const amount = parseFloat(document.getElementById('donation-amount').value);
+        const donorName = document.getElementById('donor-name').value.trim() || 'Anonymous';
+        const donorEmail = document.getElementById('donor-email').value.trim();
+        const paymentMethod = document.getElementById('payment-method').value;
 
-    donateCustomAmount() {
-        const amount = parseFloat(document.getElementById('custom-donation').value);
-        if (amount && amount > 0) {
-            if (confirm(`Donate $${amount} to Grab-a-Book?`)) {
-                // Store donation
-                this.donations.push({
-                    type: 'money',
-                    amount: amount,
-                    donorName: 'Anonymous',
-                    createdAt: new Date().toISOString(),
-                    status: 'Completed'
-                });
-                
-                this.showNotification('success', `Thank you for your $${amount} donation to Grab-a-Book! Your contribution helps us provide free books to students in need.`);
-                document.getElementById('custom-donation').value = '';
-            }
-        } else {
+        if (!amount || amount <= 0) {
             this.showNotification('error', 'Please enter a valid donation amount.');
+            return;
         }
+
+        if (!donorEmail) {
+            this.showNotification('error', 'Please enter your email address.');
+            return;
+        }
+
+        if (!paymentMethod) {
+            this.showNotification('error', 'Please select a payment method.');
+            return;
+        }
+
+        // Store donation
+        this.donations.push({
+            type: 'money',
+            amount: amount,
+            donorName: donorName,
+            donorEmail: donorEmail,
+            paymentMethod: paymentMethod,
+            createdAt: new Date().toISOString(),
+            status: 'Completed'
+        });
+
+        // Show success message
+        const message = donorName === 'Anonymous' 
+            ? `Thank you for your $${amount} donation! A receipt has been sent to ${donorEmail}.`
+            : `Thank you, ${donorName}, for your $${amount} donation! A receipt has been sent to ${donorEmail}.`;
+        
+        this.showNotification('success', message);
+
+        // Reset form
+        document.getElementById('money-donation-form').reset();
+        document.querySelectorAll('.amount-btn').forEach(b => b.classList.remove('active'));
     }
 
     submitBookDonation() {
@@ -2225,6 +2250,39 @@ class GrabABook {
         // Close modal
         bootstrap.Modal.getInstance(document.getElementById('bulkNoticeModal')).hide();
     }
+
+    async downloadDatabaseExport() {
+        try {
+            this.showNotification('info', 'Preparing database export... This may take a moment.');
+            
+            // Call the API endpoint
+            const response = await fetch(`${this.apiBaseUrl}/admin/export`);
+            
+            if (!response.ok) {
+                throw new Error('Failed to export database');
+            }
+            
+            // Get the blob from the response
+            const blob = await response.blob();
+            
+            // Create a download link
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `GrabABook_Database_Export_${new Date().toISOString().slice(0,10)}.docx`;
+            document.body.appendChild(a);
+            a.click();
+            
+            // Clean up
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            
+            this.showNotification('success', 'Database exported successfully! Check your downloads folder.');
+        } catch (error) {
+            console.error('Error exporting database:', error);
+            this.showNotification('error', 'Failed to export database. Please try again.');
+        }
+    }
 }
 
 // Initialize the application
@@ -2242,5 +2300,3 @@ function showRegister() { grabABook.showRegister(); }
 function searchBooks() { grabABook.searchBooks(); }
 function filterByCategory(category) { grabABook.filterByCategory(category); }
 function filterAPBySubject(subject) { grabABook.filterAPBySubject(subject); }
-function donateAmount(amount) { grabABook.donateAmount(amount); }
-function donateCustomAmount() { grabABook.donateCustomAmount(); }

@@ -18,6 +18,14 @@ builder.Services.AddCors(options =>
               .AllowAnyHeader()
               .AllowCredentials();
     });
+
+    options.AddPolicy("OpenPolicy", builder => 
+    { 
+        builder
+        .AllowAnyOrigin() 
+        .AllowAnyMethod() 
+        .AllowAnyHeader();  
+    });
 });
 
 // Add database service
@@ -32,12 +40,11 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
-
-// Enable CORS
-app.UseCors("AllowFrontend");
+// Enable CORS (use OpenPolicy for easier development)
+app.UseCors("OpenPolicy");
 
 app.UseAuthorization();
+
 
 app.MapControllers();
 
