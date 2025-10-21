@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("GrabABook.API")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+dcb105b2191b0e1aad9ecb04e7a59aaa543cf461")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+48203b3c0b51dc6dc7939d102ecabcf04e63d83a")]
 [assembly: System.Reflection.AssemblyProductAttribute("GrabABook.API")]
 [assembly: System.Reflection.AssemblyTitleAttribute("GrabABook.API")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

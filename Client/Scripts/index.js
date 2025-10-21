@@ -658,7 +658,7 @@ class GrabABook {
         const digitalBooks = userBooks.filter(book => book.deliveryMethod === 'digital');
         const physicalBooks = userBooks.filter(book => book.deliveryMethod === 'physical');
         
-        // Categorize books by due date status
+        // Check for overdue books
         const today = new Date();
         const threeDaysFromNow = new Date();
         threeDaysFromNow.setDate(today.getDate() + 3);
@@ -672,12 +672,6 @@ class GrabABook {
             if (!book.dueDate) return false;
             const dueDate = new Date(book.dueDate);
             return dueDate >= today && dueDate <= threeDaysFromNow;
-        });
-        
-        const upcomingBooks = userBooks.filter(book => {
-            if (!book.dueDate) return false;
-            const dueDate = new Date(book.dueDate);
-            return dueDate > threeDaysFromNow;
         });
         
         const statsHtml = `
@@ -703,9 +697,9 @@ class GrabABook {
                 <div class="col-md-3">
                     <div class="card bg-light">
                         <div class="card-body text-center">
-                            <h5 class="card-title">Currently Reading</h5>
+                            <h5 class="card-title">Total Books</h5>
                             <h3 class="text-success">${userBooks.length}</h3>
-                            <small class="text-muted">Total checked out</small>
+                            <small class="text-muted">Currently checked out</small>
                         </div>
                     </div>
                 </div>
@@ -741,53 +735,18 @@ class GrabABook {
         } else {
             let content = statsHtml;
             
-            // Overdue books section
-            if (overdueBooks.length > 0) {
-                content += `
-                    <div class="col-12 mb-4">
-                        <h4 class="text-danger mb-3">
-                            <i class="fas fa-exclamation-triangle me-2"></i>Overdue Books (${overdueBooks.length})
-                        </h4>
-                        <div class="row">
-                            ${overdueBooks.map(book => this.createBookCard(book, 'my-books')).join('')}
-                        </div>
-                    </div>
-                `;
-            }
-            
-            // Due soon books section
-            if (dueSoonBooks.length > 0) {
-                content += `
-                    <div class="col-12 mb-4">
-                        <h4 class="text-warning mb-3">
-                            <i class="fas fa-clock me-2"></i>Due Soon (${dueSoonBooks.length})
-                        </h4>
-                        <div class="row">
-                            ${dueSoonBooks.map(book => this.createBookCard(book, 'my-books')).join('')}
-                        </div>
-                    </div>
-                `;
-            }
-            
-            // Current reads section (all checked out books)
+            // All checked out books in one section
             if (userBooks.length > 0) {
-                // Only show books that aren't in overdue or due soon sections
-                const currentReadsBooks = userBooks.filter(book => {
-                    return !overdueBooks.includes(book) && !dueSoonBooks.includes(book);
-                });
-                
-                if (currentReadsBooks.length > 0) {
-                    content += `
-                        <div class="col-12 mb-4">
-                            <h4 class="text-success mb-3">
-                                <i class="fas fa-book-open me-2"></i>Currently Reading (${userBooks.length})
-                            </h4>
-                            <div class="row">
-                                ${currentReadsBooks.map(book => this.createBookCard(book, 'my-books')).join('')}
-                            </div>
+                content += `
+                    <div class="col-12 mb-4">
+                        <h4 class="mb-3">
+                            <i class="fas fa-book-open me-2"></i>My Books (${userBooks.length})
+                        </h4>
+                        <div class="row">
+                            ${userBooks.map(book => this.createBookCard(book, 'my-books')).join('')}
                         </div>
-                    `;
-                }
+                    </div>
+                `;
             }
             
             // Reading history section
@@ -1257,14 +1216,20 @@ class GrabABook {
         });
 
         this.lateFees = totalLateFees;
-        document.getElementById('late-fee-amount').textContent = `$${totalLateFees.toFixed(2)}`;
+        
+        // Only update if element exists
+        const lateFeeElement = document.getElementById('late-fee-amount');
+        if (lateFeeElement) {
+            lateFeeElement.textContent = `$${totalLateFees.toFixed(2)}`;
+        }
         
         // Update color based on amount
-        const lateFeeElement = document.getElementById('late-fee-amount');
-        if (totalLateFees > 0) {
-            lateFeeElement.className = 'text-danger';
-        } else {
-            lateFeeElement.className = 'text-success';
+        if (lateFeeElement) {
+            if (totalLateFees > 0) {
+                lateFeeElement.className = 'text-danger';
+            } else {
+                lateFeeElement.className = 'text-success';
+            }
         }
     }
 
